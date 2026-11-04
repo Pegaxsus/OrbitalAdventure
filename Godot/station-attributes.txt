@@ -1,0 +1,1 @@
+estacion_02_verde_salvia.png,Estación Salvia,0,0,0,155,4500,26000,8
