@@ -1,0 +1,4 @@
+trait,parametro,valor
+gimbal_miners,cono_grados,90
+long_miner,multiplicador_alcance,1.25
+double_ordnance,multiplicador_salva,2

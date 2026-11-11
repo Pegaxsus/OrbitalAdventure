@@ -1,0 +1,12 @@
+entidad,id,tipo,indice,x,y
+# Nave: X respecto al ancho e Y respecto al largo del sprite orientado.
+# Estacion: X e Y en unidades del sector, relativas al centro.
+estacion,*,atraque,0,-48,-160
+estacion,*,atraque,1,48,-160
+estacion,*,atraque,2,160,-48
+estacion,*,atraque,3,160,48
+estacion,*,atraque,4,48,160
+estacion,*,atraque,5,-48,160
+estacion,*,atraque,6,-160,48
+estacion,*,atraque,7,-160,-48
+estacion,*,atraque,8,0,-385

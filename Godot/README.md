@@ -4,4 +4,4 @@ Importa project.godot con Godot 4.5.1 estándar y pulsa F6 desde main.tscn o F5 
 
 Godot carga automáticamente savegames/godot/latest.json junto a los ejecutables. F9 vuelve a cargar esa partida. Si todavía no existe, busca el guardado anterior de Godot en user://sector.json. F5 guarda en la nueva ubicación.
 
-Los archivos de ship-attributes contienen masa, fuerza, casco máximo, longitud y capacidad de bodega, en ese orden.
+El catálogo ships-godot.txt reúne los atributos, el nombre y el PNG de cada nave. Coloca los sprites en ships y conserva los IDs al editar el catálogo.

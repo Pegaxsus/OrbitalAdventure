@@ -1,1 +1,6 @@
 estacion_02_verde_salvia.png,Estación Salvia,0,0,0,155,4500,26000,8
+estacion_03_turquesa_grisaceo.png,Estación Nácar,1,0,0,155,4400,25000,8
+station-bi.png,Estación Ícaro,2,0,0,300,6000,30000,2,bi,0.49,0.475
+station-tri.png,Estación Tríada,3,0,0,340,7500,36000,6,tri,0.49,0.55
+shipyard.png,Astillero Forja,4,0,0,420,16000,55000,1,shipyard,0.81,0.505
+estacion0.png,Estación Cénit,0,1850,1250,860,22000,42000,4,custom,0.5,0.5

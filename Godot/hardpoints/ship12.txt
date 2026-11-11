@@ -1,0 +1,15 @@
+entidad,id,tipo,indice,x,y
+nave,12,motor,0,0.35321,0.48697
+nave,12,motor,1,-0.35321,0.48697
+nave,12,laser,0,0.24089,-0.27362
+nave,12,laser,1,-0.24089,-0.27362
+nave,12,ametralladora,0,0.24089,-0.27362
+nave,12,ametralladora,1,-0.24089,-0.27362
+nave,12,mineria,0,0.24089,-0.27362
+nave,12,mineria,1,-0.24089,-0.27362
+nave,12,salvaging,0,0.24089,-0.27362
+nave,12,salvaging,1,-0.24089,-0.27362
+nave,12,misil,0,0.24976,0.01303
+nave,12,misil,1,-0.24976,0.01303
+nave,12,cohete,0,0.12857,-0.44625
+nave,12,cohete,1,-0.12857,-0.44625

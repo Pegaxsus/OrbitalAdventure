@@ -1,0 +1,5 @@
+entidad,id,tipo,indice,x,y
+nave,10,motor,0,0.40286,0.48371
+nave,10,motor,1,-0.40286,0.48371
+nave,10,motor,2,0.33156,0.48208
+nave,10,motor,3,-0.33156,0.48208

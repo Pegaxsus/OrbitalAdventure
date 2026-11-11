@@ -1,0 +1,9 @@
+entidad,id,tipo,indice,x,y
+nave,24,motor,0,0.18112,0.48860
+nave,24,motor,1,-0.18112,0.48860
+nave,24,misil,0,0.00000,-0.38762
+nave,24,cohete,0,0.00000,-0.38762
+nave,24,laser,0,0.00000,-0.38762
+nave,24,ametralladora,0,0.00000,-0.38762
+nave,24,mineria,0,0.00000,-0.38762
+nave,24,salvaging,0,0.00000,-0.38762
