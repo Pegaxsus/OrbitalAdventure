@@ -1,0 +1,8 @@
+entidad,id,tipo,indice,x,y,rotacion_grados,longitud,anchura
+estacion,*,atraque_dread,0,-349.732025,-205.784424,0,258,196
+estacion,*,atraque_normal,0,195.932068,-131.77478,0,164,58
+estacion,*,atraque_normal,1,191.080856,-290.9172,0,164,58
+estacion,*,pdc,0,31.6056461,95.27162,0,20,20
+estacion,*,pdc,1,-27.3511543,94.01721,-180,20,20
+estacion,*,pdc,2,49.35529,-354.697418,0,20,20
+estacion,*,pdc,3,-50.8052864,-354.1413,-180,20,20

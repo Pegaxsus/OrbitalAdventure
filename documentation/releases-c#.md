@@ -1,6 +1,18 @@
-﻿# Lanzamientos de C#
+# Lanzamientos de C#
 
 Historial reconstruido a partir de las entregas del proyecto. Las compilaciones de prueba sin número conservan su identificación original.
+
+## 0.1.6 · Ambientes por sector
+
+**Pedido.** Documentar los seis conceptos de fondo y preparar los cuatro bocetos para futuros sistemas.
+
+**Trabajo realizado.** Arco de gas, Velo de polvo, Límite planetario y Remanente de supernova se incluyen como PNG con transparencia y perfiles configurables. Las asignaciones de Nácar y Vesper siguen vigentes. El catálogo en lore/maps documenta también Vacío profundo y Aurora solar.
+
+## 0.1.5 · Organización del proyecto
+
+**Pedido.** Reunir el arte por categorías, separar atributos y datos, centralizar la ambientación y limpiar la raíz.
+
+**Trabajo realizado.** Compilación desde build/build-csharp.ps1. Integra los recursos compartidos, el catálogo de attributes/csharp y los hardpoints de data. Conserva los guardados en savegames/csharp. Los ejecutables vigentes se entregan en la raíz y las versiones anteriores se archivan en releases/.
 
 ## 0.0.1
 
@@ -390,3 +402,45 @@ Historial reconstruido a partir de las entregas del proyecto. Las compilaciones 
 **Pedido.** Nombrar las naves 09 a 17, reclasificar 15 a 17 como Battleship y renombrar los portanaves 22 y 23 como Nyx y Chimera.
 
 **Trabajo realizado.** Se actualizaron los dos catálogos. En orden de selector, 09 a 17 son Leviatán, Mastodonte, Coloso, Alción, Azor, Centella, Bastión, Baluarte y Tempestad. Las tres Battleship reciben las ranuras estándar 4 / 2 / 2 / 2. Se conservan IDs, sprites y atributos físicos. Se generaron la ficha Markdown y el PNG claro de 0.0.58. C# superó --smoke y Godot se exportó y arrancó sin errores.
+
+## 0.0.59
+
+**Pedido.** Añadir la constelación del Imperio de Asterión, accesible por una única puerta exterior desde 4111. Usar la estación entregada para la capital con astillero, añadir guardias Stratios, aumentar la actividad pirata del sector sin estación y actualizar el mapa.
+
+**Trabajo realizado.** Se añadieron 4112 (Ciudadela Asterión), 4113 (Meridiano), 4114 (Linde) y 4115 (Vesper). La ruta de puertas es 4111–4112–4113–4115–4114. Las cuatro marcas usan el nuevo escudo azul de Asterión. La Ciudadela integra el astillero y conserva los anclajes de stationBuilder. Meridiano y Linde tienen mercados propios. Las tres Stratios de la capital llevan escudo de 75 % del casco y propulsión un 25 % superior a la de una patrulla normal. Cada baja inicia 1.800 segundos de simulación, guardados en la partida. Vesper recibe oleadas de 3–4 piratas con más frecuencia y mercantes de tránsito. Se verificaron ambas ediciones y se entregó el nuevo mapa.
+
+## 0.0.60
+
+**Pedido.** Añadir ocho cascos de Asterión con fondo transparente, clase, nombre y atributos. Afiliar la Stratios y reforzar la capital con dos cruceros del sprite crucero1 y un Battleship del sprite battleship1 desarmados hasta preparar sus hardpoints.
+
+**Trabajo realizado.** La flota suma 35 naves. Los IDs nuevos 27–34 son Vigía, Sextante, Alidada, Equinoccio, Solsticio, Eclíptica, Firmamento y Horizonte. Stratios y los ocho cascos llevan la facción asterion en ambos catálogos. Ciudadela Asterión conserva las tres Stratios reforzadas y añade dos Alidada y una Eclíptica. Estos refuerzos habilitan la ametralladora al cargar su hardpoint número 0. Los seis puestos conservan el respawn de 30 minutos. Las nuevas ranuras usan un bloque independiente para mantener las direcciones anteriores. La ficha flota-0.0.60.md incluye atributos e IDs para shipConfigurator.
+
+## 0.1.0
+
+**Pedido.** Investigar la compra de FTL en Linde, mantener presencia pirata habitual en 4115, indicar el destino de las puertas y sustituir los círculos por un sprite.
+
+**Trabajo realizado.** El FTL cuesta 5.000 Créditos. El botón cortaba el último dígito y mostraba 500 en la captura. Los botones del mercado ajustan el texto al espacio disponible y distinguen el aviso de falta de stock del aviso de saldo insuficiente, que muestra el coste total y el importe que falta. Vesper genera una patrulla pirata de 3–4 naves al entrar y revisa su relevo cada 10–18 s cuando no queda ninguna nave combativa. Las puertas usan el sprite jump-gate.png. Después de cruzar, la etiqueta de cada extremo muestra el sector de destino. Seleccionar una puerta con clic muestra ese destino en el panel de objetivo.
+
+## 0.1.1
+
+**Pedido.** Redibujar la puerta en 2D, quitar el límite aparente de motores en el editor y restringir cohetes y misiles en cuatro naves mineras.
+
+**Trabajo realizado.** La puerta usa un anillo pixel art frontal sin perspectiva. shipConfigurator 1.1 muestra el recuento de motores como puntos sin límite y permite guardarlos por encima del número de ranuras. Procurer, Retriever, Covetor y Rorqual tienen el rasgo no_ordnance. Bloquea instalar y usar cohetes y misiles. Los módulos de guardados anteriores quedan inactivos hasta retirarlos.
+
+## 0.1.2
+
+**Pedido.** Quitar los anclajes de láser, ametralladora, minería y salvaging de Firmamento, Chimera, Nyx y Leviatán, renombrar la nave 24 a Phoenix y actualizar la flota.
+
+**Trabajo realizado.** Se añadió el rasgo no_direct_tools a los cuatro cascos, se retiraron los anclajes incompatibles de sus fichas y se bloqueó su uso y su instalación en ambas ediciones. shipConfigurator 1.2 indica los tipos incompatibles. Phoenix conserva su ID. Se regeneraron el Markdown y la imagen clara de las 35 naves.
+
+## 0.1.3
+
+**Pedido.** Probar un fondo de nebulosa que se mezcle con las estrellas del sector 4108.
+
+**Trabajo realizado.** Se añadió una nube azul generada con ruido de varias escalas y alfa progresivo en los bordes. Se dibuja una sola vez por vista, anclada a Nácar, con paralaje y zoom moderado. La prueba está disponible en vuelo en ambas ediciones.
+
+## 0.1.4
+
+**Pedido.** Añadir una nebulosa roja intensa a 4115 y permitir el teletransporte por consola con tp.
+
+**Trabajo realizado.** Vesper tiene una nebulosa roja más intensa con paralaje y transparencia gradual. La consola acepta tp seguido del número de sector. El salto coloca la nave en vuelo, carga el sector y conserva el estado del FTL y el historial de puertas. Un número inexistente no cambia la partida.

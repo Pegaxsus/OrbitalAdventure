@@ -1,7 +1,7 @@
 extends Node2D
 
-const ROCKET_SPRITE := preload("res://environment/rocket-flight.png")
-const MISSILE_SPRITE := preload("res://environment/missile-flight.png")
+const ROCKET_SPRITE := preload("res://assets/projectiles/rocket-flight.png")
+const MISSILE_SPRITE := preload("res://assets/projectiles/missile-flight.png")
 
 @export var speed := 270.0
 @export var acceleration := 350.0

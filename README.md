@@ -1,10 +1,9 @@
-# OrbitalAdventure
+# Orbital Adventure · Godot 0.1.6
 
-Hangar Orbital es un juego espacial 2D de escritorio con exploración, minería y naves equipables. El proyecto de este repositorio usa Godot 4.5.1.
+Importa project.godot desde esta raíz con Godot 4.5.1 estándar y pulsa F5 en el editor.
 
-La versión actual es **0.0.58**. Abre [Godot/project.godot](Godot/project.godot) en Godot y pulsa F5 para jugar.
+assets/ contiene los gráficos, attributes/ los catálogos, data/ los sectores y hardpoints, y lore/ las facciones, la flota y los mapas. Los cuatro ambientes nuevos se asignan a futuros sectores mediante data/sector-backgrounds.txt.
 
-- [Guía del proyecto](documentation/doc.md)
-- [Historial de Godot](documentation/releases-godot.md)
-- [Flota actual](flota-0.0.58.md) y [ficha visual](flota-0.0.58.png)
-- [Mapa estelar](mapa-estelar-0.0.57.png)
+Consulta documentation/doc.md y AI_LIGHTHOUSE.md para continuar. Esta copia incluye los editores en tools/ y sus scripts de compilación en build/. La edición C# se mantiene en el árbol completo de NavePrototype.
+
+Las partidas, los ejecutables y la caché del editor se excluyen del repositorio.

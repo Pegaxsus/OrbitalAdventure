@@ -1,14 +1,14 @@
-﻿# Hangar Orbital · Guía técnica de Godot
+# Hangar Orbital · Guía técnica de Godot
 
-Estado documentado en **0.0.58**. Prototipo 2D cenital de escritorio para Windows, desarrollado con **Godot 4.5.1 estándar y GDScript**. El historial está en [releases-godot.md](releases-godot.md). Este documento cubre el proyecto de Godot.
+Estado documentado en **0.1.6**. Prototipo 2D cenital de escritorio para Windows, desarrollado con **Godot 4.5.1 estándar y GDScript**. El historial está en [releases-godot.md](releases-godot.md). Este documento cubre el proyecto de Godot.
 
 ## Arranque y exportación
 
-1. En el gestor de proyectos de Godot, importa `NavePrototype/Godot/project.godot`. Pulsa **F5 en el editor** para ejecutar `main.tscn`. **F5 dentro del juego** guarda la partida.
+1. En el gestor de proyectos de Godot, importa `NavePrototype/project.godot`. Pulsa **F5 en el editor** para ejecutar `main.tscn`. **F5 dentro del juego** guarda la partida.
 2. Para distribuir en Windows, instala las plantillas de exportación de **la misma versión del motor** y usa el perfil **Windows Desktop**. Es x86_64, con el paquete integrado en el ejecutable. Conserva los filtros de inclusión de los atributos y el sector.
-3. Para una nueva entrega, actualiza la versión que muestra `game.gd`, el destino de `export_presets.cfg` y los historiales de ambas ediciones, esta guía y `AI_LIGHTHOUSE.md` en la raíz del proyecto. El ejecutable se genera en la carpeta padre del proyecto Godot.
+3. Para una nueva entrega, actualiza la versión que muestra `game.gd`, el destino de `export_presets.cfg` y los historiales de ambas ediciones, esta guía y `AI_LIGHTHOUSE.md` en la raíz del proyecto. El ejecutable vigente se genera en la raíz. Archiva la versión anterior en releases/.
 
-Desde PowerShell, con `$godot` apuntando al ejecutable de consola de Godot y `$project` al directorio `Godot`:
+Desde PowerShell, con `$godot` apuntando al ejecutable de consola de Godot y `$project` a la raíz de NavePrototype:
 
 ```powershell
 & $godot --headless --path $project --editor --import
@@ -21,23 +21,25 @@ Revisa la salida en busca de errores de script además del código de salida. La
 ## Estructura del proyecto
 
 | Ruta relativa a `NavePrototype` | Función |
-|---|---|
-| `Godot/project.godot` | Configuración de arranque, viewport de 900 × 600, escalado de canvas y renderizador Compatibility. |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `project.godot` | Configuración de arranque, viewport de 900 × 600, escalado de canvas y renderizador Compatibility. |
 | `Godot/main.tscn` | Escena principal con un `Node2D` que ejecuta `game.gd`. |
 | `Godot/game.gd` | Estado y reglas del juego, entrada, simulación, NPC, interfaz dibujada y persistencia. |
-| `Godot/missile.tscn`, `Godot/missile.gd` | Escena compartida por cohetes y misiles. Usa `environment/rocket-flight.png` y `environment/missile-flight.png` con la proa hacia arriba. La llama se dibuja en coordenadas locales debajo del sprite y cambia de longitud con la edad del proyectil. El misil sale lateralmente según el hardpoint, espera 0,24 s y luego gira hacia el objetivo fijado al disparar. Acelera durante el vuelo y la colisión de segmento detecta naves y asteroides. El misil sigue de frente si pierde el blanco y el cambio de sector limpia los proyectiles. Velocidad inicial, aceleración, daño y radio se exponen en el inspector. |
-| `Godot/ships/` | Sprites de las 27 naves. La proa apunta hacia arriba al dibujarse. Godot aplica la rotación indicada en el catálogo al cargar cada PNG. |
-| `Godot/hardpoints.txt` | Puntos de anclaje de las estaciones. |
-| `Godot/hardpoints/ship<ID>.txt` | Puntos de anclaje de un casco. El editor guarda estas fichas. |
-| `shipConfigurator-1.0.exe` | Editor visual para colocar puntos sobre el PNG. Se abre desde la raíz del proyecto. |
-| `Godot/ship-traits.txt` | Valores de los rasgos. Cada fila contiene rasgo, parámetro y valor. La edición C# incorpora este mismo archivo. |
-| `Godot/ships-godot.txt` | Catálogo completo de naves. Cada fila relaciona un ID estable con su PNG, su rotación y sus atributos. |
-| `Godot/environment/` | Fondo estelar, cinco tamaños de asteroide con dos variantes cada uno, 22 sprites de restos transparentes seis sprites de estación y la lámina `ship-explosion.png`. |
-| `Godot/station-attributes.txt` | Catálogo de estaciones con sprite, posición, tamaño, masa, casco y número de puertos. |
-| `Godot/sector.txt` | Catálogo ordenado del sector inicial y base de composición de los demás sectores. |
-| `Godot/export_presets.cfg` | Perfil reproducible de exportación de Windows. |
+| `Godot/missile.tscn`, `Godot/missile.gd` | Escena compartida por cohetes y misiles. Usa `assets/projectiles/rocket-flight.png` y `assets/projectiles/missile-flight.png` con la proa hacia arriba. La llama se dibuja en coordenadas locales debajo del sprite y cambia de longitud con la edad del proyectil. El misil sale lateralmente según el hardpoint, espera 0,24 s y luego gira hacia el objetivo fijado al disparar. Acelera durante el vuelo y la colisión de segmento detecta naves y asteroides. El misil sigue de frente si pierde el blanco y el cambio de sector limpia los proyectiles. Velocidad inicial, aceleración, daño y radio se exponen en el inspector. |
+| `assets/ships/` | Sprites de las 35 naves. La proa apunta hacia arriba al dibujarse. Godot aplica la rotación indicada en el catálogo al cargar cada PNG. |
+| `data/hardpoints.txt` | Puntos de anclaje de las estaciones. |
+| `data/hardpoints/ship<ID>.txt` | Puntos de anclaje de un casco. El editor guarda estas fichas. |
+| `shipConfigurator-1.5.exe` | Editor visual para colocar puntos sobre el PNG. Lee el catálogo y el arte de la raíz del proyecto. |
+| `attributes/ship-traits.txt` | Valores de los rasgos. Cada fila contiene rasgo, parámetro y valor. La edición C# incorpora este mismo archivo. |
+| `attributes/ships-godot.txt` | Catálogo completo de naves. Cada fila relaciona un ID estable con su PNG, su rotación y sus atributos. |
+| `assets/` | Fondo estelar, cinco tamaños de asteroide con dos variantes cada uno, 22 sprites de restos transparentes seis sprites de estación y la lámina `ship-explosion.png`. |
+| `attributes/station-attributes.txt` | Catálogo de estaciones con sprite, posición, tamaño, masa, casco y número de puertos. |
+| `data/sector.txt` | Catálogo ordenado del sector inicial y base de composición de los demás sectores. |
+| `export_presets.cfg` | Perfil reproducible de exportación de Windows. |
 | `savegames/godot/latest.json` | Última partida local de Godot. Se crea al guardar. |
-| `Godot/.godot/` | Caché regenerable del editor, ignorada por Git. |
+| `.godot/` | Caché regenerable del editor, ignorada por Git. |
+
+Los recursos gráficos se organizan en assets/ships, asteroids, backgrounds, debris, effects, factions, gates, modules, projectiles, shields, stations, turrets y previews. Las fichas de estaciones personalizadas viven en data/stations. lore/factions contiene el dossier, lore/fleets la ficha e imagen de la flota y lore/maps la imagen del mapa estelar.
 
 Los archivos `.uid` y `.import` acompañan al código y los recursos. Guarda los textos en UTF-8 para conservar las tildes.
 
@@ -66,7 +68,7 @@ Los archivos `.uid` y `.import` acompañan al código y los recursos. Guarda los
 
 ### Formatos de datos
 
-- **Catálogo de naves**. `ships-godot.txt` tiene un encabezado y una fila por nave. Los campos son `id,sprite,rotacion,masa,empuje,casco,longitud,bodega,armamento,defensa,utilidad,motores,nombre,clase,claseID,traits`. Conserva los IDs de 0 a 23 porque se usan en las partidas y en el equipamiento. Para cambiar el aspecto, coloca un PNG en `Godot/ships/` y cambia el campo `sprite` de la fila. Usa `0` para un sprite con proa hacia arriba o `180` para uno con proa hacia abajo. El editor toma el cambio al volver a ejecutar el proyecto. Exporta otro ejecutable para distribuirlo.
+- **Catálogo de naves**. `ships-godot.txt` tiene un encabezado y una fila por nave. Los campos son `id,sprite,rotacion,masa,empuje,casco,longitud,bodega,armamento,defensa,utilidad,motores,nombre,clase,claseID,traits`. Conserva los IDs de 0 a 23 porque se usan en las partidas y en el equipamiento. Para cambiar el aspecto, coloca un PNG en `assets/ships/` y cambia el campo `sprite` de la fila. Usa `0` para un sprite con proa hacia arriba o `180` para uno con proa hacia abajo. El editor toma el cambio al volver a ejecutar el proyecto. Exporta otro ejecutable para distribuirlo.
 - **Estación**, separada por comas y sin encabezado. Campos en orden: `sprite,nombre,sector,x,y,tamaño,masa,casco,puertos`. El sector es de base cero. En las estaciones originales de cuatro brazos, los puertos normales se numeran de 0 a 7, en pares norte, este, sur y oeste. Los nuevos layouts se detallan al final de esta guía. El catálogo incluye Salvia en (0, 0) de 4107 y Nácar en (0, 0) de 4108. Cada una tiene ocho puertos y su propio casco máximo, de 26.000 y 25.000 respectivamente. El ataque pirata resta 90 por ráfaga y el casco tiene un mínimo de 1. Cada puerto normal mide 164 × 58 unidades. Las naves de clase Dreadnought o superior usan el atraque exterior de 258 × 196 situado 385 unidades al norte de la estación. Sus centros están a 160 unidades en el eje de cada brazo y a 48 unidades a cada lado. Los rectángulos no se solapan. El atraque admite hasta 10° respecto al eje largo del puerto y hasta 3 unidades/s. Al menos el 90 % del rectángulo de la nave, girado con su rumbo y dimensionado según su longitud y la proporción del sprite, debe quedar dentro del puerto. Tras cinco segundos sin recibir daño, cada estación regenera el 20 % de su casco máximo por minuto, hasta completarlo. El casco se guarda y el temporizador de reparación se reinicia al cargar la partida.
 - **Sector**, separado por comas y sin encabezado. Campos en orden: `x,y,radio,recurso_1,recurso_2,paso_potencia`. El segundo recurso puede ser `-1`. Los recursos se indexan según `RES`. La potencia base de minería se deriva de `0.25 + 0.05 × paso_potencia`.
 - **Ranuras por clase**. El hangar lee la clase del catálogo. Los IDs son 0 para cazas y drones, 1 para Fragata, 2 para Crucero, 3 para Battleship, 4 para Dreadnought y 5 para Titán. La Fragata es el casco pilotable más pequeño y el Titán será la clase superior. Cazas y drones quedan previstos como unidades con IA básica y órdenes.
@@ -78,20 +80,31 @@ Los archivos `.uid` y `.import` acompañan al código y los recursos. Guarda los
 | Battleship | 4 | 2 | 2 | 2 |
 | Dreadnought | 5 | 3 | 3 | 2 |
 
-La [ficha visual de la flota](../flota-0.0.21.png) reúne los sprites y atributos de esta versión.
+La [ficha visual de la flota](../lore/fleets/flota-0.1.2.png) reúne los sprites y atributos.
 
 ## Puntos de anclaje
 
-Ambas ediciones comparten `hardpoints.txt` para estaciones y una ficha por nave en `Godot/hardpoints/`. Cada fila tiene `entidad,id,tipo,indice,x,y`. Las filas que empiezan por `#` son comentarios. Los índices de cada tipo empiezan en cero.
+Ambas ediciones comparten `hardpoints.txt` para estaciones y una ficha por nave en `data/hardpoints/`. Cada fila tiene `entidad,id,tipo,indice,x,y`. Las filas que empiezan por `#` son comentarios. Los índices de cada tipo empiezan en cero.
 
 - Para una **nave**, usa `nave`, su ID del catálogo y uno de los tipos `motor`, `ametralladora`, `cohete`, `misil`, `mineria` o `salvaging`. Las coordenadas son fracciones del ancho y largo del sprite ya orientado. `0,0` es el centro. X positiva va a estribor e Y positiva va hacia la popa. Por ejemplo, `nave,20,motor,0,-0.20,0.45` coloca una tobera del Rorqual hacia la izquierda y la popa. Define las toberas consecutivamente desde el índice 0.
 - Para una **estación**, usa `estacion`, el número de sector o `*` para el valor común, `atraque` y el índice de puerto. X e Y se miden en unidades del sector desde el centro de la estación. Un punto de un sector concreto tiene prioridad sobre el valor común.
 
-Abre `shipConfigurator-1.0.exe` junto a la carpeta `Godot`, elige una nave, marca los tipos y haz clic sobre el casco. Cada tipo de arma o herramienta admite tantos puntos como ranuras de armamento tenga la nave. Los puntos de motor no tienen límite por ranuras. Solo determinan el número y el origen de las llamas al pulsar W. El empuje se calcula a partir de los atributos de la nave. **Simetría** añade una pareja por tipo fuera del eje si caben ambos puntos. Un clic en el eje añade un punto por tipo.
+Abre `shipConfigurator-1.5.exe`, elige una nave, marca los tipos y haz clic sobre el casco. Cada tipo de arma o herramienta admite tantos puntos como ranuras de armamento tenga la nave. Los puntos de motor no tienen límite por ranuras. Solo determinan el número y el origen de las llamas al pulsar W. El empuje se calcula a partir de los atributos de la nave. **Simetría** añade una pareja por tipo fuera del eje si caben ambos puntos. Un clic en el eje añade un punto por tipo.
 
-Selecciona un punto en la lista y haz clic sobre la nave para moverlo. Con simetría activa también se mueve su pareja si existe. **Esc** vuelve al modo de colocación. **Deshacer** y **Rehacer** están disponibles como botones y con Ctrl+Z y Ctrl+Y. **Guardar ficha** escribe `Godot/hardpoints/ship<ID>.txt`. El editor aplica la rotación del catálogo. **Cargar PNG** cambia la referencia visual del editor. Para cambiar el sprite del juego, actualiza su catálogo.
+Selecciona un punto en la lista y haz clic sobre la nave para moverlo. Con simetría activa también se mueve su pareja si existe. **Esc** vuelve al modo de colocación. **Deshacer** y **Rehacer** están disponibles como botones y con Ctrl+Z y Ctrl+Y. **Guardar ficha** escribe `data/hardpoints/ship<ID>.txt`. El editor aplica la rotación del catálogo. **Cargar PNG** cambia la referencia visual del editor. Para cambiar el sprite del juego, actualiza su catálogo.
 
-Al ejecutar el proyecto desde el editor de Godot se leen las fichas nuevas. Para incorporarlas a los ejecutables, reexporta Godot o compila C# con `build-csharp.ps1`. El misil guiado usa `misil` y el cohete usa `cohete`. El tipo `laser` queda reservado para un módulo futuro.
+Al ejecutar el proyecto desde el editor de Godot se leen las fichas nuevas. Para incorporarlas a los ejecutables, reexporta Godot o compila C# con `build/build-csharp.ps1`. El misil guiado usa `misil` y el cohete usa `cohete`. El tipo `laser` queda reservado para un módulo futuro.
+
+### Hardpoints de hangar
+
+shipConfigurator 1.4 ofrece **Tubo lateral**, **Rampa** y **Plataforma** para drones. Los Dreadnought (claseID 4) y Titanes (claseID 5) también ofrecen esos tres tipos para cazas. La elegibilidad se deriva de claseID en cada casco existente o futuro. Cada hangar guarda sus propios índices y admite varios puntos sin consumir ranuras de armamento.
+
+- **Tubo lateral**. Marca la boca del tubo en el costado, igual que el origen de un misil lateral.
+- **Rampa**. Marca el centro de la trayectoria. Selecciona la rampa y haz clic derecho hacia el rumbo de despegue. La flecha discontinua muestra el aterrizaje en sentido contrario.
+- **Plataforma**. Marca el centro donde se posará la unidad. Este anclaje se usará para el descenso y cierre de compuertas.
+
+Los tipos serializados son hangar_drones_tubo, hangar_drones_rampa y hangar_drones_plataforma, con sus equivalentes hangar_cazas_*. Conservan las coordenadas normalizadas y el formato de las fichas existentes. Coloca los puntos con clic, simetría o selección múltiple de tipos y pulsa Guardar ficha. Los cascos existentes admiten esta configuración desde el editor. Las posiciones se eligen por casco. Esta entrega incorpora la edición de anclajes y deja pendiente el comportamiento de vuelo y recuperación.
+
 
 Los disparos salen del punto asignado sin cambiar su dirección frontal. Los láseres convergen desde sus anclajes y el Rorqual conserva el autoapuntado. Los puntos de atraque controlan el centro de los rectángulos y la posición de salida. Las estaciones solo consumen puntos de atraque en esta entrega.
 
@@ -118,7 +131,7 @@ El Tractor Beam Tier0 funciona al equiparlo. Su círculo gris pulsante marca el 
 | Rorqual | Industria, minería y salvaging | 760 t | 19.300 kN | 1.950 | 242 | 780 U |
 | Nyx | Portadrones y cazas | 580 t | 16.200 kN | 1.730 | 224 | 290 U |
 | Chimera | Portadrones y cazas | 510 t | 15.000 kN | 1.550 | 210 | 280 U |
-| Dread Combat | Combate con futuras torretas y misiles | 690 t | 17.800 kN | 2.210 | 232 | 305 U |
+| Phoenix | Combate con futuras torretas y misiles | 690 t | 17.800 kN | 2.210 | 232 | 305 U |
 
 Los cuatro tienen ranuras 5/3/3/2 de armamento/defensa/utilidad/motores y aceptan los módulos actuales. El Rorqual puede combinar varias herramientas de minería y salvaging. El lanzamiento de drones y cazas y las torretas siguen pendientes. Cada estación tiene un único puerto exterior para estos cascos. El puerto exterior se guarda con el índice 8. Si se cambia de tamaño en el hangar, al despegar se elige un puerto compatible.
 
@@ -166,7 +179,7 @@ Escape cierra la pantalla superpuesta activa. El inventario tiene una cuadrícul
 
 ### Mejoras de motor y defensa automática
 
-Los iconos blancos viven en `Godot/environment/modules`. Los sprites con sufijo `-world` se usan para el botín y la torreta PDC. El doble clic equipa en la primera ranura compatible libre. Thrusters (ID 6) y Gyro (ID 7) usan ranuras de motores y otorgan un 10 % aditivo por módulo. Thrusters aumenta empuje, velocidad máxima y frenada. Gyro aumenta la velocidad de giro. Cada mejora tiene una tirada independiente de botín del 20 % por NPC destruido.
+Los iconos blancos viven en `assets/modules`. Los sprites con sufijo `-world` se usan para el botín y la torreta PDC. El doble clic equipa en la primera ranura compatible libre. Thrusters (ID 6) y Gyro (ID 7) usan ranuras de motores y otorgan un 10 % aditivo por módulo. Thrusters aumenta empuje, velocidad máxima y frenada. Gyro aumenta la velocidad de giro. Cada mejora tiene una tirada independiente de botín del 20 % por NPC destruido.
 
 PDC (ID 8) usa ranuras de defensa y se activa en vuelo. Cada estación tiene uno en cada punta. Los NPC actuales no montan PDC por defecto. Se reservan para futuras naves capitales. El PDC prioriza proyectiles entrantes, exige línea de visión y responde a atacantes recientes. Los cuatro cañones del PDC giran juntos sobre su base fija mientras hay una amenaza válida. La capa de cañones mantiene su último ángulo respecto al casco al perder el blanco. El PDC dispara hasta tres tiros por ráfaga mientras conserva un blanco válido. Dos impactos interceptan el cohete o misil sin aplicar su daño explosivo. Algunos piratas lanzan cohetes al jugador.
 
@@ -204,7 +217,7 @@ update_ftl() administra los tiempos y commit_ftl() cambia de sector al terminar 
 
 Los traders de paso y los mercantes de ruta llevan FTL por defecto y lo sueltan con un 10 % de probabilidad al morir. Sus visitas y esperas respetan el cooldown. Las escoltas comparten la representación visual de la salida del trader. La animación usa una copia visual del modelo para representar su aceleración al abandonar el sector. La llegada usa un desplazamiento visual que se reduce rápidamente.
 
-environment/ftl-arrival-v2.png contiene seis celdas de 362 × 362 px. Es un recurso generado por IA e integrado con transparencia. El icono de inventario muestra FTL. El mapa continúa limitado a los sectores descubiertos.
+assets/effects/ftl-arrival-v2.png contiene seis celdas de 362 × 362 px. Es un recurso generado por IA e integrado con transparencia. El icono de inventario muestra FTL. El mapa continúa limitado a los sectores descubiertos.
 
 La versión 0.0.54 usa ftl_frame() para suavizar el alfa de cada celda con una máscara radial antes de dibujarla. Los bordes quedan totalmente transparentes y los seis resultados se conservan en caché. El humo se desvanece progresivamente durante los últimos 0,25 s.
 
@@ -222,7 +235,7 @@ Los puertos capitales se seleccionan por claseID 4 o superior, incluidos los Dre
 
 ### Editor independiente de estaciones · stationBuilder 1.3
 
-`../StationBuilder.cs` y `../build-station-builder.ps1` generan `stationBuilder-1.3.exe`, una herramienta Windows Forms para preparar recursos de estaciones destinados a Godot y C#. Consulta [stationBuilder.md](stationBuilder.md) para uso y formato.
+`../tools/StationBuilder.cs` y `../build/build-station-builder.ps1` generan `stationBuilder-1.3.exe`, una herramienta Windows Forms para preparar recursos de estaciones destinados a Godot y C#. Consulta [stationBuilder.md](stationBuilder.md) para uso y formato.
 
 Admite arrastrar PNG al lienzo, mover, girar, escalar, duplicar y ordenar capas. Permite situar un pivote y hardpoints de atraque normal, Dread y PDC. Los puertos miden 164 × 58 y 258 × 196 unidades respectivamente. Exportar PNG genera el sprite transparente y la ficha `.hardpoints.csv`. Guardar proyecto escribe por separado el diseño portátil `.station.json`. Las guías no forman parte del PNG.
 
@@ -243,8 +256,57 @@ El layout `custom` lee `estacion0.hardpoints.txt`, copia del CSV exportado por s
 
 Cénit tiene inventarios de minerales y módulos, precios de minerales, casco y descubrimiento propios. El estado usa la entrada correspondiente de `extra_stations`. Las partidas anteriores cargan la estación con el stock inicial. Los mercados adicionales admiten las once referencias de módulos, incluido FTL. En el minimapa se proyecta la posición de cada estación descubierta. En el mapa estelar los nombres se agrupan bajo su sector. El tráfico local elige estación por proximidad. Las comprobaciones de colisión por silueta descartan muestras que quedan más allá de la proa o la popa.
 
-La [flota 0.0.57](../flota-0.0.57.md) documenta las 27 naves a partir del catálogo. La [imagen del mapa](../mapa-estelar-0.0.57.png) muestra los seis enlaces de la semilla 4107 y las posiciones iniciales de Salvia y Cénit.
+La flota 0.0.57 documenta las 27 naves a partir del catálogo. La imagen del mapa muestra los seis enlaces de la semilla 4107 y las posiciones iniciales de Salvia y Cénit.
 
 ### Catálogo de flota 0.0.58
 
-Las naves 09 a 17 se llaman Leviatán, Mastodonte, Coloso, Alción, Azor, Centella, Bastión, Baluarte y Tempestad. Las tres últimas son Battleship (claseID 3) y usan 4 ranuras de armamento, 2 de defensa, 2 de utilidad y 2 de motores. Nyx y Chimera son las naves 22 y 23. Se conservan los IDs del catálogo y las posiciones de equipamiento ya existentes. Consulta la [ficha de flota actualizada](../flota-0.0.58.md).
+Las naves 09 a 17 se llaman Leviatán, Mastodonte, Coloso, Alción, Azor, Centella, Bastión, Baluarte y Tempestad. Las tres últimas son Battleship (claseID 3) y usan 4 ranuras de armamento, 2 de defensa, 2 de utilidad y 2 de motores. Nyx y Chimera son las naves 22 y 23. Se conservan los IDs del catálogo y las posiciones de equipamiento ya existentes. Consulta la ficha de flota actualizada.
+
+### Constelación del Imperio de Asterión
+
+El mapa tiene nueve sectores y diez conexiones. Los seis enlaces originales conservan su orden para mantener los bits de descubrimiento de partidas anteriores. Se añaden, en este orden, 4111–4112, 4112–4113, 4113–4115 y 4115–4114. La única puerta entre ambas regiones es 4111–4112. El FTL conserva sus requisitos de destino descubierto y distancia máxima. El escudo `assets/factions/asterion-crest.png` sustituye a los puntos de los cuatro sectores imperiales en el mapa de vuelo.
+
+| Sector | Estación | Tráfico destacado |
+|---|---|---|
+| 4112 | Ciudadela Asterión, con astillero integrado | Tres guardias Stratios reforzados |
+| 4113 | Meridiano, tipo BI | Patrulla Stratios y mercado |
+| 4114 | Linde, tipo TRI | Patrulla Stratios y mercado |
+| 4115 · Vesper | — | Patrulla Stratios, mercantes de tránsito y mayor actividad pirata |
+
+La Ciudadela usa `station1.png` y `station1.hardpoints.txt` con los datos originales de stationBuilder. Tiene dos puertos normales, un Dread, cuatro PDC y 56.000 puntos de casco. El campo adicional `shipyard` del catálogo permite identificar el astillero integrado en el hangar. Los tres mercados de la constelación guardan sus existencias de forma independiente.
+
+Cada puesto de guardia usa un índice estable de 0 a 2 y un contador de 1.800 segundos de simulación desde que su nave es destruida. El contador avanza aunque el jugador se traslade a otro sector o atraque. Godot persiste estos valores en `guard_wait` y C# los agrega al final de la economía. La capital vuelve a crear sólo las patrullas disponibles al cargar o entrar. Los refuerzos de las tres guardias son escudo de 75 % del casco y un 25 % más de velocidad y aceleración de patrulla. Desde 0.1.0, Vesper genera 3–4 piratas al entrar y revisa cada 10–18 s si debe enviar otra patrulla. Las naves en retirada permiten el relevo.
+
+El destino de un mercante es un índice de estación. La búsqueda de ruta usa el sector que figura en esa estación. Los guardados anteriores que contienen cinco campos de asteroides, pecios y botín se leen por prefijo y los cuatro campos nuevos se inicializan normalmente. Consulta el [mapa 0.0.59](../lore/maps/mapa-estelar-0.0.59.png) para ver todos los enlaces.
+
+### Flota del Imperio de Asterión
+
+El catálogo tiene 35 naves (IDs 0–34). Su última columna, `faccion`, usa el valor `asterion` para Stratios (ID 26) y los ocho cascos nuevos. El PNG de cada casco se recortó al área visible con un píxel de margen transparente. Usa esos PNG desde shipConfigurator para editar anclajes. La ficha de flota detalla nombres, atributos, ranuras e IDs de hardpoints.
+
+Ciudadela Asterión tiene seis puestos de patrulla. Los tres primeros mantienen las Stratios con refuerzos de escudo y propulsión. Los puestos 3 y 4 usan Alidada (ID 29, crucero1) y el 5 usa Eclíptica (ID 32, battleship1). Los tres refuerzos mantienen sus órbitas desarmados hasta cargar `nave,29,ametralladora,0,…` o `nave,32,ametralladora,0,…` respectivamente. Los tres contadores nuevos se inicializan a cero si se carga un guardado que sólo contiene los puestos de Stratios.
+
+Los IDs de ranuras de las naves 0–26 se conservan. Desde el ID 27, la base es 1024 y cada casco reserva 16 posiciones. Los offsets de armamento, defensa, utilidad y motores son 0, 5, 9 y 12. La carga valida categoría, casco y ranura para ambos esquemas.
+
+### Mercado y puertas desde 0.1.0
+
+El FTL cuesta 5.000 Créditos por unidad y se vende por 2.500. Los botones de compra y venta ajustan la fuente al ancho disponible y muestran el precio unitario. Si no hay saldo, el mensaje de compra muestra el coste total de la cantidad solicitada y cuánto falta. Si no hay stock, muestra cuántas unidades quedan. En el caso reportado en Linde, la compra de un FTL con 713 Créditos falla por una diferencia de 4.287.
+
+`assets/gates/jump-gate.png` es el sprite transparente de las puertas. Se dibuja a 134 × 134 unidades, centrado en su posición. El alcance de salto es 110 unidades desde el centro. La etiqueta en vuelo usa el bit del enlace en `crossed` y resuelve el sector opuesto, por lo que indica un destino distinto según el extremo. El panel de objetivo muestra el destino incluso al seleccionar una puerta aún sin cruzar. Seleccionarla no cambia el descubrimiento del mapa.
+
+Desde 0.1.1, el sprite de puerta es un anillo pixel art frontal con transparencia interior y exterior. Los catálogos marcan a Procurer, Retriever, Covetor y Rorqual con `no_ordnance`. Se comprueba al instalar módulos y al contar armas activas. Los guardados conservan los módulos ya montados para que el jugador pueda retirarlos.
+
+Desde 0.1.2, Leviatán, Nyx, Chimera y Firmamento tienen el rasgo `no_direct_tools`. Carecen de anclajes de láser, ametralladora, minería y salvaging. El editor impide añadirlos y el juego bloquea el equipamiento y uso de los módulos correspondientes. La nave 24 se llama Phoenix y mantiene el ID 23. La [tabla](../lore/fleets/flota-0.1.2.md) y la [imagen](../lore/fleets/flota-0.1.2.png) recogen la flota completa.
+
+Desde 0.1.3, el vuelo en el sector 4108 muestra `assets/backgrounds/nebula-4108.png` encima del campo de estrellas y debajo de la escena. La textura de 704 × 448 tiene una máscara irregular con alfa cero en el perímetro. Se dibuja sin repetición. Su ancla es (450, −320) y su desplazamiento toma el 18 % del movimiento de cámara. La posición en pantalla y el tamaño usan la raíz cuadrada del zoom para que la capa lejana cambie con suavidad.
+
+Desde 0.1.4, el sector 4115 usa `nebula-4115.png`, una nube roja más intensa que comparte la proyección con el fondo de 4108. En la consola, `tp 4115` lleva a Vesper y `tp 4108` a Nácar. El comando reutiliza la entrada de sector del FTL para recolocar la nave y reconstruir la escena. La nave queda en vuelo, la consola sigue abierta y los destinos inexistentes no alteran el estado. Se conservan la recarga del FTL y el registro de puertas cruzadas.
+
+## Distribución 0.1.5
+
+Abre project.godot en la raíz. Godot guarda en savegames/godot/latest.json tanto desde el editor como desde el ejecutable en la raíz. Una copia independiente del ejecutable usa savegames/ junto al exe. Los textos de attributes/ y data/ se incluyen en la exportación mediante el perfil Windows Desktop.
+
+## Fondos por sector desde 0.1.6
+
+data/background-profiles.txt define ID, PNG, ancho, alto, ancla X, ancla Y y factor de paralaje. data/sector-backgrounds.txt asigna un perfil al número visible del sector. El perfil se dibuja en vuelo encima del campo estelar sin repetición y con bordes transparentes. Godot carga los dos catálogos en _ready y los incorpora al export mediante export_presets.cfg. Los sectores sin asignación usan sólo estrellas. Consulta [ambientes para futuros sectores](../lore/maps/ambientes.md) para ver los cuatro perfiles listos y las dos ideas pendientes.
+
+En shipConfigurator 1.5, Ctrl o Mayús en Puntos colocados permite seleccionar varios y borrarlos con Supr o Borrar selección. La casilla Simular módulo de plataforma equipado muestra la huella de las plataformas en el editor. El rumbo de despegue se guarda como comentario CSV antes de la fila de la rampa, en grados horarios desde proa. Las rampas anteriores usan 0 grados hasta que se editen.

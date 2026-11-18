@@ -1,0 +1,36 @@
+id,sprite,rotacion,masa,empuje,casco,longitud,bodega,armamento,defensa,utilidad,motores,nombre,clase,claseID,traits,faccion
+0,ship0.png,0,8,900,90,34,20,2,1,2,1,Nave 01,Crucero,2,,
+1,ship1.png,0,15,1500,130,47,30,2,1,2,1,Nave 02,Crucero,2,,
+2,ship2.png,0,24,2200,180,60,45,2,1,2,1,Nave 03,Crucero,2,,
+3,ship3.png,0,38,3000,250,73,60,2,1,2,1,Nave 04,Crucero,2,,
+4,ship4.png,0,55,3900,340,86,80,2,1,2,1,Nave 05,Crucero,2,,
+5,ship5.png,0,85,5100,450,99,110,4,2,2,2,Nave 06,Battleship,3,,
+6,ship6.png,0,110,6000,580,112,145,4,2,2,2,Nave 07,Battleship,3,,
+7,ship7.png,0,170,7650,760,125,190,5,3,3,2,Nave 08,Dreadnought,4,,
+8,ship8.png,0,230,9200,960,155,260,5,3,3,2,Leviatán,Dreadnought,4,no_direct_tools,
+9,ship9.png,0,178,8100,800,138,210,5,3,3,2,Mastodonte,Dreadnought,4,,
+10,ship10.png,0,145,7200,690,127,175,5,3,3,2,Coloso,Dreadnought,4,,
+11,ship11.png,0,26,2300,190,62,47,2,1,2,1,Alción,Crucero,2,,
+12,ship12.png,0,17,1750,145,51,32,2,1,2,1,Azor,Crucero,2,,
+13,ship13.png,0,37,3100,245,72,58,2,1,2,1,Centella,Crucero,2,,
+14,ship14.png,0,42,3300,265,76,65,4,2,2,2,Bastión,Battleship,3,,
+15,ship15.png,0,52,3800,320,82,76,4,2,2,2,Baluarte,Battleship,3,,
+16,ship16.png,0,60,4200,365,88,90,4,2,2,2,Tempestad,Battleship,3,,
+17,ship17.png,180,12,950,110,32,72,1,1,1,1,Procurer,Fragata,1,no_ordnance,
+18,ship18.png,180,48,3600,310,78,155,2,1,2,1,Retriever,Crucero,2,no_ordnance,
+19,ship19.png,180,95,5650,470,94,240,4,2,2,2,Covetor,Battleship,3,no_ordnance,
+20,ship20.png,0,760,19300,1950,242,780,5,3,3,2,Rorqual,Dreadnought,4,gimbal_miners|long_miner|no_ordnance,
+21,ship21.png,0,580,16200,1730,224,290,5,3,3,2,Nyx,Dreadnought,4,no_direct_tools,
+22,ship22.png,0,510,15000,1550,210,280,5,3,3,2,Chimera,Dreadnought,4,no_direct_tools,
+23,ship23.png,0,690,17800,2210,232,305,5,3,3,2,Phoenix,Dreadnought,4,,
+24,raptor.png,0,7,910,80,29,14,1,1,1,1,Raptor,Fragata,1,,
+25,manticore.png,0,11,1100,115,32,18,1,1,1,1,Manticore,Fragata,1,double_ordnance,
+26,stratios.png,0,28,2380,225,62,58,2,1,2,1,Stratios,Crucero,2,,asterion
+27,asterion-fragata0.png,0,11,1070,105,36,25,1,1,1,1,Vigía,Fragata,1,,asterion
+28,asterion-crucero0.png,0,30,2700,235,66,54,2,1,2,1,Sextante,Crucero,2,,asterion
+29,asterion-crucero1.png,0,36,3050,285,72,62,2,1,2,1,Alidada,Crucero,2,,asterion
+30,asterion-crucero2.png,0,53,3900,370,83,83,2,1,2,1,Equinoccio,Crucero,2,,asterion
+31,asterion-battleship0.png,0,125,6800,665,114,151,4,2,2,2,Solsticio,Battleship,3,,asterion
+32,asterion-battleship1.png,0,102,5950,565,108,132,4,2,2,2,Eclíptica,Battleship,3,,asterion
+33,asterion-dread0.png,0,780,19800,2400,248,355,5,3,3,2,Firmamento,Dreadnought,4,no_direct_tools,asterion
+34,asterion-dread1.png,0,570,16250,1770,222,276,5,3,3,2,Horizonte,Dreadnought,4,,asterion

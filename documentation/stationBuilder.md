@@ -1,6 +1,6 @@
-﻿# stationBuilder 1.3
+# stationBuilder 1.3
 
-Editor independiente de estaciones para Windows. Ejecuta `stationBuilder-1.3.exe` desde la raíz del proyecto. Utiliza Windows Forms y .NET Framework de Windows, sin necesitar Godot instalado. La herramienta sirve para preparar recursos para ambas ediciones del juego y tiene numeración propia. El juego continúa en 0.0.56.
+Editor independiente de estaciones para Windows. Ejecuta `stationBuilder-1.3.exe` desde la raíz del proyecto. Utiliza Windows Forms y .NET Framework de Windows, sin necesitar Godot instalado. La herramienta sirve para preparar recursos para ambas ediciones del juego y tiene numeración propia.
 
 ## Crear una estación
 
@@ -64,10 +64,10 @@ El guardado escribe primero archivos temporales y restaura los originales si fal
 
 ## Desarrollo y comprobación
 
-Fuente: `StationBuilder.cs`. Compilación desde la raíz:
+Fuente `tools/StationBuilder.cs`. Compilación desde la raíz:
 
 ```powershell
-& ./build-station-builder.ps1
+& ./build/build-station-builder.ps1
 $test = Start-Process -FilePath (Resolve-Path stationBuilder-1.3.exe) -ArgumentList '--smoke' -WindowStyle Hidden -Wait -PassThru
 $test.ExitCode
 ```

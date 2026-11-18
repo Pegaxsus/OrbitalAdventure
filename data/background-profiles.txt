@@ -1,0 +1,7 @@
+# profile,texture,width,height,anchor_x,anchor_y,parallax
+nacar,nebula-4108.png,2100,1340,450,-320,0.18
+vesper,nebula-4115.png,2100,1340,450,-320,0.18
+gas-arc,gas-arc.png,1500,844,-550,-40,0.15
+dust-veil,dust-veil.png,1700,956,0,-620,0.12
+planet-limb,planet-limb.png,1800,1012,520,2000,0.09
+supernova-remnant,supernova-remnant.png,1450,816,540,-60,0.15

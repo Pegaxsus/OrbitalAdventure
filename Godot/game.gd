@@ -1,9 +1,50 @@
 extends Node2D
 
-const MISSILE := preload("res://missile.tscn")
+const MISSILE := preload("res://Godot/missile.tscn")
 const HALF := 5000.0
+const SECTOR_COUNT := 9
+const ASTERION_HOME := 5
+const PIRATE_FRONTIER := 8
+const HOME_STATION := 6
+const STRATIOS := 26
+const GUARD_RESPAWN := 1800.0
+const ASTERION_CREST := preload("res://assets/factions/asterion-crest.png")
+const JUMP_GATE := preload("res://assets/gates/jump-gate.png")
+
+func empty_sector_arrays() -> Array:
+	var result := []
+	for i in range(SECTOR_COUNT):
+		result.append([])
+	return result
 const ROCK_HP := 2400
-const STAR_FIELD := preload("res://environment/stars.png")
+const STAR_FIELD := preload("res://assets/backgrounds/stars.png")
+const BACKGROUND_ASSETS := "res://assets/backgrounds/"
+var sector_backgrounds: Dictionary = {}
+
+func load_sector_backgrounds() -> void:
+	var profiles := {}
+	for line in FileAccess.get_file_as_string("res://data/background-profiles.txt").split("\n", false):
+		var row := line.strip_edges().split(",")
+		if row[0].begins_with("#") or row.size() != 7: continue
+		profiles[row[0]] = {
+			"texture": load(BACKGROUND_ASSETS + row[1]) as Texture2D,
+			"size": Vector2(row[2].to_float(), row[3].to_float()),
+			"anchor": Vector2(row[4].to_float(), row[5].to_float()),
+			"parallax": row[6].to_float(),
+		}
+	for line in FileAccess.get_file_as_string("res://data/sector-backgrounds.txt").split("\n", false):
+		var row := line.strip_edges().split(",")
+		if row[0].begins_with("#") or row.size() != 2: continue
+		if row[0].is_valid_int() and profiles.has(row[1]):
+			sector_backgrounds[row[0].to_int()] = profiles[row[1]]
+
+func draw_sector_background(center: Vector2) -> void:
+	var background: Dictionary = sector_backgrounds.get(4107 + sector, {})
+	if background.is_empty() or background.texture == null: return
+	var scale := sqrt(zoom)
+	var size: Vector2 = background.size * scale
+	var position: Vector2 = center + (background.anchor - pos) * background.parallax * scale
+	draw_texture_rect(background.texture, Rect2(position - size / 2, size), false)
 const MODES := ["Ametralladora", "Cohete", "Minería", "Sin armamento", "Salvaging", "Misil"]
 const RES := ["Hielo de agua", "Metano", "Hierro", "Aluminio", "Titanio", "Cobre", "Silicio", "Carbono", "Níquel", "Tierras raras"]
 const PAINT := [Color.WHITE, Color(1.5,.65,.55), Color(.65,1.4,.65), Color(1.25,.72,1.4)]
@@ -12,7 +53,9 @@ const LEGACY_SAVE := "user://sector.json"
 func save_path() -> String:
 	var base := OS.get_executable_path().get_base_dir()
 	if OS.has_feature("editor"):
-		base = ProjectSettings.globalize_path("res://").path_join("..").simplify_path()
+		base = ProjectSettings.globalize_path("res://")
+	elif base.get_file().to_lower() == "releases" and FileAccess.file_exists(base.get_base_dir().path_join("project.godot")):
+		base = base.get_base_dir()
 	return base.path_join("savegames/godot/latest.json")
 var ships: Array[Texture2D] = []
 var asteroid_sprites: Array[Texture2D] = []
@@ -56,7 +99,7 @@ var neutral_attack := -100.0
 var attack_position := Vector2.ZERO
 var npc_target: Dictionary = {}
 
-var wreck_fields: Array = [[],[],[],[],[]]
+var wreck_fields: Array = empty_sector_arrays()
 var explosions: Array[Dictionary] = []
 var wreck_sprites: Array[Texture2D] = []
 var salvage_target := -1
@@ -136,7 +179,7 @@ func update_wrecks(dt: float) -> void:
 		status = "Recuperadas %d U de %s" % [amount,RES[resource]]
 
 
-const SHIP_BLAST := preload("res://environment/ship-explosion.png")
+const SHIP_BLAST := preload("res://assets/effects/ship-explosion.png")
 const BLAST_COLUMNS := [20,245,505,786,1100,1430,1730,2048]
 var player_destroying := false
 
@@ -184,6 +227,37 @@ func make_npc(role: String, ship: int, at: Vector2) -> Dictionary:
 	npcs.append(npc)
 	return npc
 
+const CAPITAL_PATROL_SHIPS := [STRATIOS,STRATIOS,STRATIOS,29,29,32]
+var guard_wait: Array[float] = [0.0,0.0,0.0,0.0,0.0,0.0]
+
+func reinforced_guard(npc: Dictionary) -> bool:
+	var slot_index := int(npc.get("guard_slot",-1))
+	return slot_index >= 0 and slot_index < 3
+
+func npc_shield_capacity(npc: Dictionary) -> float:
+	if not npc.shield: return 0.0
+	return float(specs[npc.ship][2])*(.75 if reinforced_guard(npc) else .5)
+
+func update_home_guards(dt: float) -> void:
+	for slot in range(guard_wait.size()):
+		guard_wait[slot] = maxf(0,guard_wait[slot]-dt)
+		if sector != ASTERION_HOME or guard_wait[slot] > 0: continue
+		var alive := false
+		for i in range(npcs.size()-1,-1,-1):
+			if npcs[i].get("guard_slot",-1) != slot: continue
+			if npcs[i].hp > 0: alive = true
+			else: npcs.remove_at(i)
+		if alive: continue
+		var orbit := (slot%3)*TAU/3+(PI/3 if slot >= 3 else 0.0)
+		var radius := 515 if slot < 3 else 680
+		var at: Vector2 = stations[HOME_STATION].p+Vector2.from_angle(orbit)*radius
+		var ship: int = CAPITAL_PATROL_SHIPS[slot]
+		var guard := make_npc("Patrulla",ship,at)
+		guard.guard_slot = slot
+		if reinforced_guard(guard): guard.shield = true
+		elif not hardpoints.has("nave/%d/ametralladora/0" % ship): guard.module = -1
+		guard.shield_state.value = npc_shield_capacity(guard)
+
 func reset_traffic() -> void:
 	auto_station = -1
 	auto_ready = 0.0
@@ -198,30 +272,41 @@ func reset_traffic() -> void:
 	next_trader = 8
 	neutral_attack = -100
 	make_npc("Minero",2,Vector2(230,-140))
-	make_npc("Patrulla",4,Vector2(-290,220))
-	next_raid = randf_range(45,120)
+	if sector == ASTERION_HOME: update_home_guards(0)
+	else: make_npc("Patrulla",STRATIOS if sector >= ASTERION_HOME else 4,Vector2(-290,220))
+	if sector == PIRATE_FRONTIER:
+		spawn_raid()
+		next_raid = randf_range(10,18)
+	else:
+		next_raid = randf_range(45,120)
 	extra_target = {}
 
 var next_raid := 90.0
 
 func raid_opportunity() -> void:
-	next_raid = traffic_time+randf_range(60,150)
+	var frontier := sector == PIRATE_FRONTIER
+	next_raid = traffic_time+(randf_range(10,18) if frontier else randf_range(60,150))
 	for npc in npcs:
-		if npc.role == "Pirata" and npc.hp > 0: return
-	if randf() >= .55: return
+		if npc.role == "Pirata" and npc.hp > 0 and (not frontier or not npc.get("flees",false)): return
+	if not frontier and randf() >= .55: return
+	if frontier:
+		for index in range(npcs.size()-1,-1,-1):
+			if npcs[index].role == "Pirata" and npcs[index].hp <= 0:
+				npcs.remove_at(index)
 	spawn_raid()
 
 func spawn_raid() -> void:
-	var mission: String = ["Sector","Minero","Trader","Jugador"].pick_random()
-	var entrance := Vector2.from_angle(randf()*TAU)*4600
-	for i in range(randi_range(1,2)):
+	var missions := ["Minero","Trader","Jugador"] if sector == PIRATE_FRONTIER else ["Sector","Minero","Trader","Jugador"]
+	var mission: String = missions.pick_random()
+	var entrance := Vector2.from_angle(randf()*TAU)*(2300 if sector == PIRATE_FRONTIER else 4600)
+	for i in range(randi_range(3,4) if sector == PIRATE_FRONTIER else randi_range(1,2)):
 		var pirate := make_npc("Pirata",3,entrance+Vector2(i*90,0))
 		pirate.raid = mission
 		pirate.expires = traffic_time+180
 
 func npc_hit(npc: Dictionary, amount: int, by_player: bool, attacker: Dictionary = {}) -> void:
 	if npc.hp <= 0 or amount <= 0: return
-	npc.hp = maxi(0,npc.hp-shield_damage(npc.shield_state,float(specs[npc.ship][2])*.5 if npc.shield else 0.0,amount))
+	npc.hp = maxi(0,npc.hp-shield_damage(npc.shield_state,npc_shield_capacity(npc),amount))
 	npc.pdc_attacker = attacker
 	npc.pdc_player = by_player
 	npc.pdc_until = traffic_time+8
@@ -236,6 +321,7 @@ func npc_hit(npc: Dictionary, amount: int, by_player: bool, attacker: Dictionary
 			freight.clear()
 			freight_ship = {}
 	if npc.hp == 0:
+		if npc.has("guard_slot"): guard_wait[int(npc.guard_slot)] = GUARD_RESPAWN
 		wreck_ship(npc.p,npc.ship,false,npc.angle)
 		if npc.ftl and randf() < .10: module_drops[sector].append([npc.p.x,npc.p.y,10])
 		if npc.shield and randf() < .20: module_drops[sector].append([npc.p.x,npc.p.y,9])
@@ -248,9 +334,10 @@ func npc_hit(npc: Dictionary, amount: int, by_player: bool, attacker: Dictionary
 	if by_player:
 		attack_position = npc.p
 		if npc.role in ["Trader","Mercante","Minero","Escolta"]:
-			var patrol := npcs[1]
-			if patrol.hp > 0 and patrol.p.distance_to(npc.p) < 720 and ray_rock(patrol.p,npc.p).x < 0:
-				neutral_attack = traffic_time
+			for patrol in npcs:
+				if patrol.role == "Patrulla" and patrol.hp > 0 and patrol.p.distance_to(npc.p) < 720 and ray_rock(patrol.p,npc.p).x < 0:
+					neutral_attack = traffic_time
+					break
 
 func fire_npc(npc: Dictionary, at: Vector2, victim: Dictionary) -> void:
 	if npc.module != 0: return
@@ -296,7 +383,7 @@ func steer_npc(npc: Dictionary, goal: Vector2, speed: float, dt: float, mining_r
 		var side: Vector2 = (npc.p-rock.p).normalized()
 		desired = (desired.normalized().orthogonal()+side*.7).normalized()*speed
 	var old_velocity: Vector2 = npc.v
-	npc.v = npc.v.move_toward(desired,80*dt)
+	npc.v = npc.v.move_toward(desired,80*dt*(1.25 if reinforced_guard(npc) else 1.0))
 	npc.active_thrust = (npc.v-old_velocity).length()/maxf(dt,.00001)
 	npc.p += npc.v*dt
 	var facing: Vector2 = npc.end-npc.p if npc.trace > 0 else offset
@@ -430,7 +517,8 @@ func update_traffic(dt: float) -> void:
 			"Patrulla":
 				goal = Vector2(-280,200)+Vector2.from_angle(traffic_time*.13)*340
 				if not station.is_empty():
-					goal = station.p+Vector2.from_angle(traffic_time*.13)*280
+					var slot_index := int(npc.get("guard_slot",-1))
+					goal = station.p+Vector2.from_angle(traffic_time*.13+((slot_index%3)*TAU/3+(PI/3 if slot_index >= 3 else 0.0) if slot_index >= 0 else 0.0))*(280 if slot_index < 0 else (515 if slot_index < 3 else 680))
 				if not station.is_empty() and not pirate.is_empty() and (traffic_time < station_raid_until or pirate.p.distance_to(station.p) < 465):
 					goal = pirate.p+(npc.p-pirate.p).normalized()*155
 					fire_npc(npc,pirate.p,pirate)
@@ -442,6 +530,11 @@ func update_traffic(dt: float) -> void:
 					fire_npc(npc,pirate.p,pirate)
 				elif bullets.size() > 0 and npc.p.distance_to(pos) < 650:
 					goal = pos+(npc.p-pos).normalized()*200
+		if npc.has("guard_slot"):
+			var home: Vector2 = stations[HOME_STATION].p
+			if home.distance_to(npc.p) > 800 or home.distance_to(goal) > 800:
+				goal = home+(Vector2(npc.p)-home).normalized()*(515 if int(npc.guard_slot) < 3 else 680)
+			if reinforced_guard(npc): speed *= 1.25
 		steer_npc(npc,goal,speed,dt,rock_index)
 
 var freight: Dictionary = {}
@@ -469,8 +562,8 @@ func update_freight(dt: float) -> void:
 		freight_clock += dt
 		if freight_clock < 30: return
 		freight_clock = 0
-		var origin := randi_range(0,1)
-		var destination := 1-origin
+		var origin := 0 if sector >= ASTERION_HOME else randi_range(0,1)
+		var destination := mini(8,HOME_STATION+sector-ASTERION_HOME) if sector >= ASTERION_HOME else 1-origin
 		var kind := -1
 		var best := 0
 		var stock := station_minerals(origin)
@@ -482,11 +575,13 @@ func update_freight(dt: float) -> void:
 		if kind < 0: return
 		var amount := mini(stock[kind],8)
 		stock[kind] -= amount
-		var start := port_center(stations[origin],0)
-		freight = {"sector":origin,"destination":destination,"kind":kind,"amount":amount,"x":start.x,"y":start.y,"hp":int(specs[5][2]),"ftl_wait":300.0}
+		var local_origin := sector if sector >= ASTERION_HOME else int(stations[origin].sector)
+		var start := gate_position(route_edge(local_origin,int(stations[origin].sector)),local_origin) if sector >= ASTERION_HOME else port_center(stations[origin],0)
+		freight = {"sector":local_origin,"destination":destination,"kind":kind,"amount":amount,"x":start.x,"y":start.y,"hp":int(specs[5][2]),"ftl_wait":300.0}
 	var local := int(freight.sector)
 	var destination := int(freight.destination)
-	var edge := route_edge(local,destination) if local != destination else -1
+	var target_sector := int(stations[destination].sector)
+	var edge := route_edge(local,target_sector) if local != target_sector else -1
 	var goal := gate_position(edge,local) if edge >= 0 else port_center(stations[destination],0)
 	var at := Vector2(freight.x,freight.y)
 	if local == sector and freight_ship.is_empty():
@@ -590,16 +685,16 @@ func load_stations() -> void:
 	sky.resize(150,100,Image.INTERPOLATE_LANCZOS)
 	sky.resize(900,600,Image.INTERPOLATE_BILINEAR)
 	soft_sky = ImageTexture.create_from_image(sky)
-	for line in FileAccess.get_file_as_string("res://station-attributes.txt").strip_edges().split("\n"):
+	for line in FileAccess.get_file_as_string("res://attributes/station-attributes.txt").strip_edges().split("\n"):
 		var data := line.strip_edges().split(",")
-		var art: Texture2D = load("res://environment/"+data[0])
+		var art: Texture2D = load("res://assets/stations/"+data[0])
 		var soft := art.get_image()
 		soft.resize(36,36,Image.INTERPOLATE_LANCZOS)
 		soft.resize(256,256,Image.INTERPOLATE_BILINEAR)
 		var station := {"name":data[1],"sector":int(data[2]),"p":Vector2(float(data[3]),float(data[4])),
-			"size":float(data[5]),"mass":int(data[6]),"hp":int(data[7]),"max_hp":int(data[7]),"repair_delay":0.0,"repair_fraction":0.0,"ports":int(data[8]),"art":art,"soft":ImageTexture.create_from_image(soft),"layout":data[9] if data.size()>9 else "cross","pivot":Vector2(float(data[10]),float(data[11])) if data.size()>11 else Vector2(.5,.5),"mask":art.get_image(),"capital_ports":3 if data.size()>9 and data[9]=="tri" else (2 if data.size()>9 and data[9]=="bi" else 1),"discovered":false,"reserve":0,"stock":[20,20,20,20,20,20,20,20,20,20],"modules":new_station_modules(),"dock_mounts":{},"defense_mounts":{}}
+			"size":float(data[5]),"mass":int(data[6]),"hp":int(data[7]),"max_hp":int(data[7]),"repair_delay":0.0,"repair_fraction":0.0,"ports":int(data[8]),"art":art,"soft":ImageTexture.create_from_image(soft),"layout":data[9] if data.size()>9 else "cross","pivot":Vector2(float(data[10]),float(data[11])) if data.size()>11 else Vector2(.5,.5),"mask":art.get_image(),"capital_ports":3 if data.size()>9 and data[9]=="tri" else (2 if data.size()>9 and data[9]=="bi" else 1),"discovered":false,"reserve":0,"stock":[20,20,20,20,20,20,20,20,20,20],"modules":new_station_modules(),"shipyard":(data.size()>9 and data[9]=="shipyard") or (data.size()>12 and data[12]=="shipyard"),"dock_mounts":{},"defense_mounts":{}}
 		if station.layout == "custom":
-			load_station_mounts(station,"res://"+data[0].get_basename()+".hardpoints.txt")
+			load_station_mounts(station,"res://data/stations/"+data[0].get_basename()+".hardpoints.txt")
 		stations.append(station)
 
 func new_station_modules() -> Array:
@@ -889,15 +984,15 @@ func draw_docked_background(screen: Vector2) -> void:
 
 
 
-const SHIP_COUNT := 27
+const SHIP_COUNT := 35
 var trait_values: Dictionary = {}
 
 var hardpoints: Dictionary = {}
 
 func load_hardpoints() -> bool:
-	if not read_hardpoint_file("res://hardpoints.txt",-1): return false
+	if not read_hardpoint_file("res://data/hardpoints.txt",-1): return false
 	for id in range(SHIP_COUNT):
-		var path := "res://hardpoints/ship%d.txt" % id
+		var path := "res://data/hardpoints/ship%d.txt" % id
 		if FileAccess.file_exists(path) and not read_hardpoint_file(path,id): return false
 	return true
 
@@ -938,7 +1033,7 @@ func npc_mount(npc: Dictionary, kind: String) -> Vector2:
 	return npc.p+ship_mount(npc.ship,kind,0,1).rotated(npc.angle)
 
 func load_ship_traits() -> bool:
-	var file := FileAccess.open("res://ship-traits.txt",FileAccess.READ)
+	var file := FileAccess.open("res://attributes/ship-traits.txt",FileAccess.READ)
 	if file == null:
 		push_error("No se pudo abrir ship-traits.txt")
 		return false
@@ -978,7 +1073,7 @@ func mining_aim(nose: Vector2, forward_axis: Vector2, reach: float) -> Vector2:
 func load_ship_catalog() -> bool:
 	ships.resize(SHIP_COUNT)
 	specs.resize(SHIP_COUNT)
-	var file := FileAccess.open("res://ships-godot.txt",FileAccess.READ)
+	var file := FileAccess.open("res://attributes/ships-godot.txt",FileAccess.READ)
 	if file == null:
 		push_error("No se pudo abrir ships-godot.txt")
 		return false
@@ -987,14 +1082,14 @@ func load_ship_catalog() -> bool:
 		var line := file.get_line().strip_edges()
 		if line.is_empty(): continue
 		var row := line.split(",")
-		if row.size() != 16 or not row[0].is_valid_int() or row[2] not in ["0","180"]:
+		if row.size() != 17 or not row[0].is_valid_int() or row[2] not in ["0","180"]:
 			push_error("Fila de nave inválida en ships-godot.txt: "+line)
 			return false
 		var id := int(row[0])
 		if id < 0 or id >= SHIP_COUNT or ships[id] != null:
 			push_error("ID de nave inválido o repetido: "+row[0])
 			return false
-		var texture := load("res://ships/"+row[1].strip_edges()) as Texture2D
+		var texture := load("res://assets/ships/"+row[1].strip_edges()) as Texture2D
 		if texture == null:
 			push_error("PNG de nave inválido: "+row[1])
 			return false
@@ -1015,12 +1110,13 @@ func _ready() -> void:
 	target_title_font.font_weight = 700
 	target_body_font.font_names = PackedStringArray(["Consolas"])
 	add_child(missile_layer)
+	load_sector_backgrounds()
 	for i in range(1,33):
-		var path := "res://environment/debris-%02d.png" % i
+		var path := "res://assets/debris/debris-%02d.png" % i
 		if ResourceLoader.exists(path): wreck_sprites.append(load(path))
 	for size in range(1, 6):
 		for variant in range(1, 3):
-			asteroid_sprites.append(load("res://environment/asteroid-%d-%d.png" % [size, variant]))
+			asteroid_sprites.append(load("res://assets/asteroids/asteroid-%d-%d.png" % [size, variant]))
 	if not load_hardpoints() or not load_ship_traits() or not load_ship_catalog():
 		get_tree().quit(1)
 		return
@@ -1028,7 +1124,7 @@ func _ready() -> void:
 	cargo.fill(0)
 	inventory.resize(RES.size())
 	inventory.fill(0)
-	for i in range(5):
+	for i in range(SECTOR_COUNT):
 		fields.append(generate_field(i))
 		sector_loot.append([])
 	rocks = fields[0]
@@ -1056,8 +1152,9 @@ func generate_links() -> Array[Vector2i]:
 		var b := state%5
 		var pair := Vector2i(mini(a,b),maxi(a,b))
 		if a != b and not result.has(pair): result.append(pair)
+	result.append_array([Vector2i(4,5),Vector2i(5,6),Vector2i(6,8),Vector2i(8,7)])
 	return result
-const MAP_POINTS := [Vector2(-175,0),Vector2(130,-95),Vector2(-20,-105),Vector2(160,95),Vector2(-30,105)]
+const MAP_POINTS := [Vector2(-288,0),Vector2(-154,-112),Vector2(-283,-124),Vector2(-295,121),Vector2(-145,111),Vector2(-18,40),Vector2(88,-63),Vector2(289,32),Vector2(190,104)]
 var fields: Array = []
 var sector_loot: Array = []
 var sector := 0
@@ -1068,7 +1165,7 @@ func generate_field(index: int) -> Array:
 	var field: Array = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 4107 + index * 7729
-	for line in FileAccess.get_file_as_string("res://sector.txt").strip_edges().split("\n"):
+	for line in FileAccess.get_file_as_string("res://data/sector.txt").strip_edges().split("\n"):
 		var row := line.strip_edges().split(",")
 		if index > 0:
 			var point := Vector2(rng.randi_range(-4940,4940),rng.randi_range(-4940,4940))
@@ -1080,13 +1177,20 @@ func generate_field(index: int) -> Array:
 
 	return field
 
+func gate_destination(edge: int, local: int) -> int:
+	var link: Vector2i = links[edge]
+	return 4107+(link.y if link.x == local else link.x)
+
+func gate_caption(edge: int) -> String:
+	return "G  →  %d" % gate_destination(edge,sector) if crossed & (1 << edge) else "G  Puerta"
+
 func gate_position(edge: int, local: int) -> Vector2:
 	var slot_index := 0
 	for i in range(edge):
 		if local == links[i].x or local == links[i].y: slot_index += 1
 	return [Vector2(0,-1250),Vector2(1250,0),Vector2(0,1250),Vector2(-1250,0)][slot_index]
 
-const FTL_ATLAS := preload("res://environment/ftl-arrival-v2.png")
+const FTL_ATLAS := preload("res://assets/effects/ftl-arrival-v2.png")
 var ftl_cooldown := 0.0
 var ftl_destination := -1
 var ftl_depart_age := -1.0
@@ -1113,7 +1217,7 @@ func jump_distance(destination: int) -> int:
 	return 999
 
 func can_ftl(destination: int) -> bool:
-	return not hangar and module_count(10) > 0 and ftl_cooldown <= 0 and destination >= 0 and destination < 5 and destination != sector and (known_sectors() & (1 << destination)) != 0 and jump_distance(destination) <= 3 and ftl_depart_age < 0 and ftl_arrival_age >= 1
+	return not hangar and module_count(10) > 0 and ftl_cooldown <= 0 and destination >= 0 and destination < SECTOR_COUNT and destination != sector and (known_sectors() & (1 << destination)) != 0 and jump_distance(destination) <= 3 and ftl_depart_age < 0 and ftl_arrival_age >= 1
 
 func request_ftl(destination: int) -> void:
 	if not can_ftl(destination):
@@ -1136,7 +1240,14 @@ func confirm_ftl() -> void:
 	state.delay = 10.0
 
 func commit_ftl() -> void:
-	sector = ftl_destination
+	enter_sector(ftl_destination)
+	ftl_depart_age = -1.0
+	ftl_arrival_age = 0.0
+	ftl_destination = -1
+	status = "FTL · Sector %d · Escudos bloqueados 60 s" % (4107+sector)
+
+func enter_sector(destination: int) -> void:
+	sector = destination
 	rocks = fields[sector]
 	fragments = sector_loot[sector]
 	var candidate := Vector2(850,700)
@@ -1161,12 +1272,8 @@ func commit_ftl() -> void:
 	cooldown = 0.0
 	clear_missiles()
 	explosions.clear()
+	ping = 1000
 	reset_traffic()
-	ftl_exits.clear()
-	ftl_depart_age = -1.0
-	ftl_arrival_age = 0.0
-	ftl_destination = -1
-	status = "FTL · Sector %d · Escudos bloqueados 60 s" % (4107+sector)
 
 func ftl_npc_arrival(npc: Dictionary) -> void:
 	npc.entry_age = 0.0
@@ -1176,6 +1283,7 @@ func ftl_npc_arrival(npc: Dictionary) -> void:
 		npc.shield_state.delay = 10.0
 
 func update_ftl(dt: float) -> void:
+	update_home_guards(dt)
 	ftl_cooldown = maxf(0,ftl_cooldown-dt)
 	if not freight.is_empty(): freight.ftl_wait = maxf(0,float(freight.get("ftl_wait",0))-dt)
 	ftl_arrival_age = minf(1,ftl_arrival_age+dt)
@@ -1217,7 +1325,7 @@ func map_ftl_click(point: Vector2) -> void:
 		if Rect2(center+Vector2(-180,45),Vector2(160,35)).has_point(point): confirm_ftl()
 		elif Rect2(center+Vector2(20,45),Vector2(160,35)).has_point(point): ftl_destination = -1
 		return
-	for i in range(5):
+	for i in range(SECTOR_COUNT):
 		if (known_sectors() & (1 << i)) != 0 and point.distance_to(center+MAP_POINTS[i]) <= 20:
 			request_ftl(i)
 			return
@@ -1260,7 +1368,7 @@ func cross_gate() -> void:
 	status = "Acércate a una puerta estelar para saltar"
 
 func ship_name() -> String:
-	return specs[selected][9] if specs[selected].size() > 9 else "Nave %02d" % (selected+1)
+	return specs[selected][9]+(" [Asterión]" if specs[selected][13] == "asterion" else "")
 
 func draw_maps(screen: Vector2) -> void:
 	if not hangar:
@@ -1278,22 +1386,30 @@ func draw_maps(screen: Vector2) -> void:
 		draw_circle(bounds.position+(pos/10000.0+Vector2(.5,.5))*bounds.size,4,Color.WHITE)
 	if not map_open: return
 	var center := screen/2
-	var panel := Rect2(center-Vector2(245,175),Vector2(490,350))
+	var panel := Rect2(center-Vector2(365,205),Vector2(730,410))
 	draw_rect(panel,Color("#151d38"))
 	draw_rect(panel,Color.TURQUOISE,false)
 	label(panel.position+Vector2(20,30),"MAPA ESTELAR  |  M Cerrar",18,Color.TURQUOISE)
-	var visited := 1
+	var visited := known_sectors()
 	for i in range(links.size()):
 		if (crossed & (1 << i)) == 0: continue
 		var link: Vector2i = links[i]
 		visited |= (1 << link.x) | (1 << link.y)
 		draw_line(center+MAP_POINTS[link.x],center+MAP_POINTS[link.y],Color.TURQUOISE,2)
-	for i in range(5):
+	for i in range(SECTOR_COUNT):
 		if (visited & (1 << i)) == 0: continue
 		var point: Vector2 = center+MAP_POINTS[i]
-		draw_circle(point,8,Color.GOLD if i == sector else Color.WHITE)
-		label(point+Vector2(11,5),str(4107+i),14)
-	var station_labels := [0,0,0,0,0]
+		if i >= ASTERION_HOME:
+			if i == sector: draw_arc(point,14,0,TAU,32,Color.GOLD,1.5,true)
+			draw_texture_rect(ASTERION_CREST,Rect2(point-Vector2(11,12),Vector2(22,24)),false)
+		else:
+			draw_circle(point,8,Color.GOLD if i == sector else Color.WHITE)
+		label(point+Vector2(15,5),str(4107+i),14)
+	if visited & (1 << PIRATE_FRONTIER):
+		label(center+MAP_POINTS[PIRATE_FRONTIER]+Vector2(-35,29),"Vesper · Sin estación",13,Color.PALE_GREEN)
+	var station_labels := []
+	station_labels.resize(SECTOR_COUNT)
+	station_labels.fill(0)
 	for index in range(stations.size()):
 		if not is_station_discovered(index): continue
 		var station: Dictionary = stations[index]
@@ -1301,7 +1417,7 @@ func draw_maps(screen: Vector2) -> void:
 		var caption := String(station.name).trim_prefix("Estación ")
 		label(center+MAP_POINTS[local]+Vector2(-32,29+station_labels[local]*16),caption,13,Color.PALE_GREEN)
 		station_labels[local] += 1
-	label(panel.position+Vector2(20,330),"G salta desde una puerta cercana",14)
+	label(panel.position+Vector2(20,392),"G salta desde una puerta cercana",14)
 
 func stat(i: int) -> int:
 	return int(specs[selected][i])
@@ -1351,7 +1467,7 @@ func choose(i: int) -> void:
 var extra_target: Dictionary = {}
 var console_open := false
 var console_text := ""
-var console_result := "show_vectors 0 | show_vectors 1"
+var console_result := "show_vectors 0/1 | tp <sector>"
 var show_vectors := false
 var player_thrust := 0.0
 
@@ -1368,7 +1484,7 @@ func entities() -> Array[Dictionary]:
 	for item in fragments: entries.append({"kind":"Recursos","p":item.p,"r":10.0,"data":item})
 	for item in module_drops[sector]: entries.append({"kind":"Módulo","p":Vector2(item[0],item[1]),"r":12.0,"module":int(item[2])})
 	for i in range(links.size()):
-		if sector in [links[i].x,links[i].y]: entries.append({"kind":"Puerta","p":gate_position(i,sector),"r":65.0})
+		if sector in [links[i].x,links[i].y]: entries.append({"kind":"Puerta","p":gate_position(i,sector),"r":67.0,"edge":i})
 	return entries
 
 func select_entity(entry: Dictionary) -> void:
@@ -1397,7 +1513,7 @@ func click_target(pointer: Vector2, deselect_empty: bool = false) -> void:
 
 	if deselect_empty: select_entity({})
 
-const CONSOLE_COMMANDS := ["show_vectors"]
+const CONSOLE_COMMANDS := ["show_vectors","tp"]
 var completion_seed := ""
 var completion_last := ""
 var completion_index := -1
@@ -1423,7 +1539,25 @@ func console_command() -> void:
 	if parts.size() == 2 and parts[0] == "show_vectors" and parts[1] in ["0","1"]:
 		show_vectors = parts[1] == "1"
 		console_result = "show_vectors "+parts[1]
-	else: console_result = "Uso: show_vectors 0 | show_vectors 1"
+	elif parts.size() == 2 and parts[0] == "tp":
+		if parts[1].is_valid_int():
+			var destination := int(parts[1])-4107
+			if destination >= 0 and destination < SECTOR_COUNT and destination != sector:
+				hangar = false
+				map_open = false
+				help_open = false
+				inventory_open = false
+				market = 0
+				quantity_row = -1
+				dragged_module = -1
+				reset_traffic_on_launch = false
+				enter_sector(destination)
+				ftl_destination = -1
+				ftl_depart_age = -1
+				ftl_arrival_age = 1
+				status = "Teletransporte a sector %d" % (4107+sector)
+				console_result = status
+	else: console_result = "Uso: show_vectors 0/1 | tp <sector>"
 	console_text = ""
 	completion_index = -1
 
@@ -1458,6 +1592,7 @@ func draw_target_info(screen: Vector2) -> void:
 	elif not npc_target.is_empty() and npc_target.hp > 0:
 		rows.append(str(specs[npc_target.ship][9])+" · "+str(npc_target.role))
 		rows.append(str(specs[npc_target.ship][10]))
+		if specs[npc_target.ship][13] == "asterion": rows.append("Imperio de Asterión")
 		if npc_target.get("scanned",false):
 			rows.append("Casco %d / %d" % [npc_target.hp,int(specs[npc_target.ship][2])])
 			var amount := int(npc_target.cargo)
@@ -1469,12 +1604,13 @@ func draw_target_info(screen: Vector2) -> void:
 			if npc_target.get("missile_loot",false): rows.append("Cohete")
 			if npc_target.ftl: rows.append("FTL")
 			if npc_target.shield:
-				rows.append("Escudo %d / %d" % [ceili(npc_target.shield_state.value),int(specs[npc_target.ship][2])*.5])
+				rows.append("Escudo %d / %d" % [ceili(npc_target.shield_state.value),ceili(npc_shield_capacity(npc_target))])
 		else: rows.append("Detalles sin escanear · TAB")
 	elif not extra_target.is_empty():
 		rows.append(extra_target.kind)
 		if extra_target.has("module"): rows.append(MODULE_NAMES[extra_target.module])
 		elif extra_target.kind == "Estación": rows.append(str(extra_target.data.name))
+		elif extra_target.kind == "Puerta": rows.append("Destino: sector %d" % gate_destination(int(extra_target.edge),sector))
 		elif extra_target.kind == "Recursos": rows.append("%s · %d U" % [RES[extra_target.data.resource],extra_target.data.amount])
 	if rows.is_empty(): return
 	var at := Vector2(screen.x-275,145)
@@ -1540,7 +1676,7 @@ func _input(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: market_click(event.position)
 		return
 	if hangar and not inventory_open and not map_open and not help_open and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		for i in range(5):
+		for i in range(SECTOR_COUNT):
 			if market_button(i).has_point(event.position):
 				if i == 2:
 					inventory_open = true
@@ -1947,7 +2083,7 @@ func save_game() -> void:
 		var wrecks: Array = []
 		for item in wreck_fields[i]: wrecks.append([item.p.x,item.p.y,item.sprite,item.angle,item.progress,item.get("hits",0)])
 		saved_wrecks.append(wrecks)
-	file.store_string(JSON.stringify({"extra_stations":stations.slice(2).map(func(station: Dictionary) -> Dictionary: return {"hp":station.hp,"discovered":station.discovered,"reserve":station.reserve,"stock":station.stock,"modules":station.modules}),"ftl_cooldown":ftl_cooldown,"shields":shield_states,"ship":selected,"paint":paint,"mode":mode,"motor":motor,"coupled":coupled,"hangar":hangar,"dock_station":dock_station,"dock_port":dock_port,"station_discovered":station_discovered,"nacar_discovered":nacar_discovered,"nacar_hp":stations[1].hp,"nacar_reserve":nacar_reserve,"nacar_stock":nacar_stock,"nacar_modules":nacar_modules,"freight":freight,"station_hp":stations[0].hp,"station_reserve":station_reserve,"module_locations":module_locations,"module_types":module_types,"credits":credits,"mineral_quantities":mineral_quantities,"object_quantities":object_quantities,"respawn_clock":respawn_clock,"mineral_stock":mineral_stock,"module_stock":module_stock,"module_drops":module_drops,
+	file.store_string(JSON.stringify({"guard_wait":guard_wait,"extra_stations":stations.slice(2).map(func(station: Dictionary) -> Dictionary: return {"hp":station.hp,"discovered":station.discovered,"reserve":station.reserve,"stock":station.stock,"modules":station.modules}),"ftl_cooldown":ftl_cooldown,"shields":shield_states,"ship":selected,"paint":paint,"mode":mode,"motor":motor,"coupled":coupled,"hangar":hangar,"dock_station":dock_station,"dock_port":dock_port,"station_discovered":station_discovered,"nacar_discovered":nacar_discovered,"nacar_hp":stations[1].hp,"nacar_reserve":nacar_reserve,"nacar_stock":nacar_stock,"nacar_modules":nacar_modules,"freight":freight,"station_hp":stations[0].hp,"station_reserve":station_reserve,"module_locations":module_locations,"module_types":module_types,"credits":credits,"mineral_quantities":mineral_quantities,"object_quantities":object_quantities,"respawn_clock":respawn_clock,"mineral_stock":mineral_stock,"module_stock":module_stock,"module_drops":module_drops,
 		"x":pos.x,"y":pos.y,"vx":vel.x,"vy":vel.y,"angle":angle,"hp":hp,"cargo":cargo,"inventory":inventory,"field":all_fields[sector],"loot":all_loot[sector],"sector":sector,"crossed":crossed,"fields":all_fields,"sector_loot":all_loot,"wrecks":saved_wrecks}))
 	status = "Partida guardada"
 
@@ -1988,21 +2124,26 @@ func load_game() -> void:
 	if not data.has("mineral_stock"): mineral_stock[2] += maxi(0,int(data.get("station_reserve",0)))
 	module_stock.assign(data.get("module_stock",[2,2,2,2,2]))
 	while module_stock.size() < MODULE_NAMES.size(): module_stock.append(2)
-	module_drops = data.get("module_drops",[[],[],[],[],[]])
+	module_drops = data.get("module_drops",empty_sector_arrays())
+	while module_drops.size() < SECTOR_COUNT: module_drops.append([])
+	guard_wait.fill(0)
+	var saved_guards: Array = data.get("guard_wait",[])
+	for i in range(mini(guard_wait.size(),saved_guards.size())):
+		guard_wait[i] = clampf(float(saved_guards[i]),0,GUARD_RESPAWN)
 	var stored: Variant = data.get("inventory", [])
 	for i in range(RES.size()):
 		inventory[i] = maxi(0, int(stored[i])) if stored is Array and stored.size() == RES.size() else 0
-	sector = clampi(int(data.get("sector",0)),0,4)
+	sector = clampi(int(data.get("sector",0)),0,SECTOR_COUNT-1)
 	crossed = clampi(int(data.get("crossed",0)),0,(1<<links.size())-1)
-	for index in range(5):
+	for index in range(SECTOR_COUNT):
 		fields[index] = generate_field(index)
 		sector_loot[index] = []
 		wreck_fields[index] = []
-		if data.has("wrecks"):
+		if data.has("wrecks") and index < data.wrecks.size():
 			for item in data.wrecks[index]:
 				wreck_fields[index].append({"p":Vector2(item[0],item[1]),"sprite":int(item[2]),"angle":item[3],"progress":item[4],"hits":int(item[5]) if item.size() > 5 else 0})
-		var saved_field: Array = data.fields[index] if data.has("fields") else (data.field if index == sector else [])
-		var loot: Array = data.sector_loot[index] if data.has("sector_loot") else (data.loot if index == sector else [])
+		var saved_field: Array = data.fields[index] if data.has("fields") and index < data.fields.size() else (data.get("field",[]) if index == sector else [])
+		var loot: Array = data.sector_loot[index] if data.has("sector_loot") and index < data.sector_loot.size() else (data.get("loot",[]) if index == sector else [])
 		if saved_field.size() == fields[index].size():
 			for i in range(saved_field.size()):
 				fields[index][i].hp = int(saved_field[i][0])
@@ -2119,7 +2260,7 @@ func recharge_shield(state: Dictionary, maximum: float, dt: float) -> void:
 func update_shields(dt: float) -> void:
 	recharge_shield(player_shield(),float(stat(2))*.5*module_count(9),dt)
 	for npc in npcs:
-		if npc.hp > 0: recharge_shield(npc.shield_state,float(specs[npc.ship][2])*.5 if npc.shield else 0.0,dt)
+		if npc.hp > 0: recharge_shield(npc.shield_state,npc_shield_capacity(npc),dt)
 
 func shield_sprite(ship: int, at: Vector2, height: float, flash: float, break_flash: float = 0.0) -> void:
 	if flash <= 0 and break_flash <= 0: return
@@ -2204,40 +2345,46 @@ const EQUIPMENT_CELL := 38.4
 const EQUIPMENT_GRID := Vector2(338,70)
 const EQUIPMENT_SPAN := EQUIPMENT_CELL*8
 const EQUIPPED_START := 64
-const WEAPON_SLOT_STRIDE := 5
-const UTILITY_START := 256
-const UTILITY_STRIDE := 3
 var module_locations: Array[int] = [0,1,2,3]
 var dragged_module := -1
 
 func weapon_location(slot_index: int, ship_index: int) -> int:
-	return EQUIPPED_START+ship_index*WEAPON_SLOT_STRIDE+slot_index
+	return slot_location(0,ship_index,slot_index)
 
 func utility_location(slot_index: int, ship_index: int) -> int:
-	return UTILITY_START+ship_index*UTILITY_STRIDE+slot_index
+	return slot_location(2,ship_index,slot_index)
 
 const CATEGORY_START := [64,352,256,448]
 const CATEGORY_STRIDE := [5,4,3,4]
 const MODULE_CATEGORY := [0,0,0,0,2,0,3,3,1,1,2]
 const MODULE_TEXTURES := [
-	preload("res://environment/modules/ametralladora.png"),preload("res://environment/modules/cohete.png"),
-	preload("res://environment/modules/mineria.png"),preload("res://environment/modules/salvaging.png"),
-	preload("res://environment/modules/tractor.png"),preload("res://environment/modules/misil.png"),
-	preload("res://environment/modules/thrusters.png"),preload("res://environment/modules/gyro.png"),preload("res://environment/modules/pdc.png"),preload("res://environment/modules/shield.svg"),preload("res://environment/modules/ftl.svg")]
+	preload("res://assets/modules/ametralladora.png"),preload("res://assets/modules/cohete.png"),
+	preload("res://assets/modules/mineria.png"),preload("res://assets/modules/salvaging.png"),
+	preload("res://assets/modules/tractor.png"),preload("res://assets/modules/misil.png"),
+	preload("res://assets/modules/thrusters.png"),preload("res://assets/modules/gyro.png"),preload("res://assets/modules/pdc.png"),preload("res://assets/shields/shield.svg"),preload("res://assets/modules/ftl.svg")]
 const MODULE_WORLD := [
-	preload("res://environment/modules/thrusters-world.png"),preload("res://environment/modules/gyro-world.png"),
-	preload("res://environment/modules/pdc-world.png")]
+	preload("res://assets/modules/thrusters-world.png"),preload("res://assets/modules/gyro-world.png"),
+	preload("res://assets/modules/pdc-world.png")]
 
 # Defense IDs for the original 24 ships remain valid in existing saves.
 const EXTRA_DEFENSE_START := 576
 const ORIGINAL_DEFENSE_SHIPS := 24
+const EXPANSION_SLOT_START := 1024
+const EXPANSION_FIRST_SHIP := 27
+const EXPANSION_STRIDE := 16
+const EXPANSION_CATEGORY_OFFSET := [0,5,9,12]
 
 func slot_location(category: int, ship: int, index: int) -> int:
+	if ship >= EXPANSION_FIRST_SHIP:
+		return EXPANSION_SLOT_START+(ship-EXPANSION_FIRST_SHIP)*EXPANSION_STRIDE+EXPANSION_CATEGORY_OFFSET[category]+index
 	if category == 1 and ship >= ORIGINAL_DEFENSE_SHIPS:
 		return EXTRA_DEFENSE_START+(ship-ORIGINAL_DEFENSE_SHIPS)*CATEGORY_STRIDE[1]+index
 	return CATEGORY_START[category]+ship*CATEGORY_STRIDE[category]+index
 
 func location_category(location: int) -> int:
+	if location >= EXPANSION_SLOT_START:
+		var slot_index := (location-EXPANSION_SLOT_START)%EXPANSION_STRIDE
+		return 0 if slot_index < 5 else (1 if slot_index < 9 else (2 if slot_index < 12 else 3))
 	if location >= EXTRA_DEFENSE_START: return 1
 	if location >= 448: return 3
 	if location >= 352: return 1
@@ -2248,7 +2395,17 @@ func equipped_slot(location: int, category: int) -> int:
 	var index := location-slot_location(category,selected,0)
 	return index if index >= 0 and index < stat(5+category) else -1
 
+func ship_allows_module(kind: int) -> bool:
+	var traits := specs[selected][12].split("|")
+	if kind in [1,5]: return "no_ordnance" not in traits
+	if kind in [0,2,3]: return "no_direct_tools" not in traits
+	return true
+
+func can_install_module(kind: int, location: int) -> bool:
+	return module_fits(kind,location) and (location < EQUIPPED_START or ship_allows_module(kind))
+
 func module_count(kind: int) -> int:
+	if not ship_allows_module(kind): return 0
 	var count := 0
 	for i in range(module_locations.size()):
 		if module_types[i] == kind and equipped_slot(module_locations[i],MODULE_CATEGORY[kind]) >= 0: count += 1
@@ -2256,6 +2413,9 @@ func module_count(kind: int) -> int:
 
 func auto_equip(item: int) -> void:
 	if item < 0 or module_locations[item] >= EQUIPPED_START: return
+	if not ship_allows_module(module_types[item]):
+		status = "Este módulo no es compatible con la nave"
+		return
 	var category: int = MODULE_CATEGORY[module_types[item]]
 	for slot in range(stat(5+category)):
 		var location := slot_location(category,selected,slot)
@@ -2321,12 +2481,14 @@ func equipment_input(event: InputEventMouseButton) -> void:
 			auto_equip(dragged_module)
 			dragged_module = -1
 	elif dragged_module >= 0:
-		if destination >= 0 and module_fits(module_types[dragged_module],destination):
+		if destination >= 0 and can_install_module(module_types[dragged_module],destination):
 			var other := module_locations.find(destination)
 			var origin := module_locations[dragged_module]
-			if other < 0 or module_fits(module_types[other],origin):
+			if other < 0 or can_install_module(module_types[other],origin):
 				if other >= 0: module_locations[other] = origin
 				module_locations[dragged_module] = destination
+		elif destination >= EQUIPPED_START and not ship_allows_module(module_types[dragged_module]):
+			status = "Este módulo no es compatible con la nave"
 		dragged_module = -1
 
 func load_modules(saved: Variant, kinds: Variant = [0,1,2,3]) -> void:
@@ -2349,16 +2511,22 @@ func load_modules(saved: Variant, kinds: Variant = [0,1,2,3]) -> void:
 			var local: int = location-CATEGORY_START[category]
 			var stride: int = CATEGORY_STRIDE[category]
 			var ship := local/stride
-			if location >= EXTRA_DEFENSE_START:
+			var slot_index := local%stride
+			if location >= EXPANSION_SLOT_START:
+				local = location-EXPANSION_SLOT_START
+				ship = EXPANSION_FIRST_SHIP+local/EXPANSION_STRIDE
+				slot_index = local%EXPANSION_STRIDE-int(EXPANSION_CATEGORY_OFFSET[category])
+			elif location >= EXTRA_DEFENSE_START:
 				local = location-EXTRA_DEFENSE_START
 				ship = ORIGINAL_DEFENSE_SHIPS+local/stride
-			if ship >= specs.size() or local%stride >= int(specs[ship][5+category]): return
+				slot_index = local%stride
+			if ship >= specs.size() or slot_index >= int(specs[ship][5+category]) or slot_location(category,ship,slot_index) != location: return
 		validated.append(location)
 	module_locations.assign(validated)
 	module_types.assign(validated_types)
 
-const PDC_BASE := preload("res://environment/modules/pdc-base.png")
-const PDC_BARRELS := preload("res://environment/modules/pdc-barrels.png")
+const PDC_BASE := preload("res://assets/turrets/pdc-base.png")
+const PDC_BARRELS := preload("res://assets/turrets/pdc-barrels.png")
 const PDC_PIVOT := Vector2(15.0/34.0,13.0/31.0)*16.0
 var pdc_states := {}
 var player_pdc_attacker: Dictionary = {}
@@ -2466,7 +2634,7 @@ var mineral_stock: Array[int] = [20,20,20,20,20,20,20,20,20,20]
 var nacar_modules: Array[int] = [2,2,2,2,2,2,2,2,2,2,2]
 var module_stock: Array[int] = [2,2,2,2,2,2,2,2,2,2,2]
 var module_types: Array[int] = [0,1,2,3]
-var module_drops: Array = [[],[],[],[],[]]
+var module_drops: Array = empty_sector_arrays()
 var market := 0
 var market_status := ""
 const MARKET_SIZE := Vector2(790,520)
@@ -2564,8 +2732,12 @@ func trade(row: int, buy: bool) -> void:
 		for i in range(module_types.size()):
 			if module_types[i] == row and module_locations[i] < 64: owned += 1
 	if buy:
-		if stock[row] < quantity or credits < price*quantity:
-			market_status = "Stock o Créditos insuficientes para esa cantidad"
+		var total := price*quantity
+		if stock[row] < quantity:
+			market_status = "Stock insuficiente. Disponibles: %d." % stock[row]
+			return
+		if credits < total:
+			market_status = "Coste: %s Créditos. Te faltan %s." % [credit_amount(total),credit_amount(total-credits)]
 			return
 		if objects:
 			var free := 64
@@ -2601,10 +2773,20 @@ func trade(row: int, buy: bool) -> void:
 func market_button(index: int) -> Rect2:
 	return Rect2(get_viewport_rect().size.x-238,94+index*39,218,33)
 
-func menu_button(area: Rect2, caption: String, green: bool = false) -> void:
+func credit_amount(amount: int) -> String:
+	var value := str(amount)
+	for split in range(value.length()-3,0,-3):
+		value = value.insert(split,".")
+	return value
+
+func menu_button(area: Rect2, caption: String, green: bool = false, fit: bool = false) -> void:
 	draw_rect(area,Color("#244938") if green else Color("#203b51"))
 	draw_rect(area,Color.PALE_GREEN if green else Color.TURQUOISE,false)
-	draw_string(ThemeDB.fallback_font,area.position+Vector2(0,area.size.y*.5+5),caption,HORIZONTAL_ALIGNMENT_CENTER,area.size.x,16,Color.WHITE)
+	var font_size := 16
+	if fit:
+		while ThemeDB.fallback_font.get_string_size(caption,HORIZONTAL_ALIGNMENT_LEFT,-1,font_size).x > area.size.x-8 and font_size > 9:
+			font_size -= 1
+	draw_string(ThemeDB.fallback_font,area.position+Vector2(0,area.size.y*.5+font_size*.3),caption,HORIZONTAL_ALIGNMENT_CENTER,area.size.x,font_size,Color.WHITE)
 
 func market_click(pointer: Vector2) -> void:
 	var at := (get_viewport_rect().size-MARKET_SIZE)/2
@@ -2643,8 +2825,8 @@ func draw_market(center: Vector2) -> void:
 		label(at+Vector2(23,y+21),MODULE_NAMES[row] if objects else RES[row],17)
 		label(at+Vector2(244,y+21),str(owned),17)
 		label(at+Vector2(710,y+21),str(stock),17)
-		menu_button(Rect2(at+Vector2(315,y),Vector2(118,28)),"← Comprar %d" % price)
-		menu_button(Rect2(at+Vector2(443,y),Vector2(118,28)),"Vender %d →" % (price/2))
+		menu_button(Rect2(at+Vector2(315,y),Vector2(118,28)),"← Comprar "+credit_amount(price),false,true)
+		menu_button(Rect2(at+Vector2(443,y),Vector2(118,28)),"Vender "+credit_amount(price/2)+" →",false,true)
 		var field := Rect2(at+Vector2(571,y),Vector2(72,28))
 		draw_rect(field,Color("#081322"))
 		draw_rect(field,Color.PALE_GREEN if quantity_row == row else Color.SLATE_GRAY,false)
@@ -2714,6 +2896,7 @@ func _draw() -> void:
 	var screen := get_viewport_rect().size
 	var center := screen/2
 	draw_texture_rect(soft_sky if hangar and soft_sky != null else STAR_FIELD,Rect2(Vector2.ZERO,screen),not hangar)
+	if not hangar: draw_sector_background(center)
 	if ships.is_empty() or ships.has(null): return
 	if hangar:
 		draw_docked_background(screen)
@@ -2759,9 +2942,8 @@ func _draw() -> void:
 		for i in range(links.size()):
 			if sector != links[i].x and sector != links[i].y: continue
 			var gate := gate_position(i,sector)
-			draw_arc(gate,52,0,TAU,48,Color.MEDIUM_PURPLE,5)
-			draw_arc(gate,38,0,TAU,40,Color.TURQUOISE,2)
-			label(gate+Vector2(-36,73),"G  Puerta",14,Color.TURQUOISE)
+			draw_texture_rect(JUMP_GATE,Rect2(gate-Vector2(67,67),Vector2(134,134)),false)
+			draw_string(ThemeDB.fallback_font,gate+Vector2(-70,82),gate_caption(i),HORIZONTAL_ALIGNMENT_CENTER,140,14,Color.TURQUOISE)
 		for npc in npcs:
 			if npc.hp <= 0: continue
 			if npc.has("ore"): draw_circle(npc.ore,6,Color.GOLD)
@@ -2834,11 +3016,11 @@ func _draw() -> void:
 		draw_set_transform(center-pos*zoom,0,Vector2.ONE*zoom)
 		draw_explosions(center)
 		draw_set_transform(Vector2.ZERO)
-	label(Vector2(20,34),"HANGAR ORBITAL / GODOT 0.0.58" if hangar else "SECTOR %d / 10.000 × 10.000" % (4107+sector),23,Color.TURQUOISE)
+	label(Vector2(20,34),"HANGAR ORBITAL / GODOT 0.1.6" if hangar else "SECTOR %d / 10.000 × 10.000" % (4107+sector),23,Color.TURQUOISE)
 	label(Vector2(20,62),"H Controles   M Mapa estelar" if hangar else "H Controles   M Mapa estelar")
 	label(Vector2(20,86),"%s   Masa %d   Empuje %d   Casco %d/%d   Bodega %d/%d U" % [ship_name(),stat(0),stat(1),hp,stat(2),used(),stat(4)])
 	if hangar:
-		label(Vector2(20,137),stations[dock_station].name+"  ·  "+("Atraque universal" if stations[dock_station].layout == "shipyard" else ("Atraque Dreadnought" if dock_port >= CAPITAL_PORT else "Puerto "+str(dock_port+1)))+"  ·  Enter despegar",15,Color.PALE_GREEN)
+		label(Vector2(20,137),stations[dock_station].name+(" · Astillero" if stations[dock_station].shipyard else "")+"  ·  "+("Atraque universal" if stations[dock_station].layout == "shipyard" else ("Atraque Dreadnought" if dock_port >= CAPITAL_PORT else "Puerto "+str(dock_port+1)))+"  ·  Enter despegar",15,Color.PALE_GREEN)
 		label(Vector2(20,158),"Entregas mineras: %d U" % (nacar_reserve if dock_station == 1 else station_reserve),15,Color.PALE_GREEN)
 		var ship_class := specs[selected][10]
 		label(Vector2(20,110),"%s | Slots: Arm. %d  Def. %d  Util. %d  Motor %d" %
