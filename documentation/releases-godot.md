@@ -2,6 +2,98 @@
 
 Historial reconstruido a partir de las entregas del proyecto. Las compilaciones de prueba sin número conservan su identificación original.
 
+## 0.1.17 · Umbral, ambientes por capas y prospección
+
+**Pedido.** Estación en E7-UUH y mapa PNG; varios sprites de ambiente superpuestos; asteroides por material, incluidos gigantes; espectrómetro equipado que informe cantidades globales; puertas a 200–500 unidades del borde.
+
+**Trabajo realizado.** Estación Umbral BI añadida al final del catálogo (índice 15), con mercados, industria y cuatro puertos. Tres capas por perfil con transparencias y paralaje, manteniendo efectos del ambiente principal. 23 sprites transparentes originales por material bruto, colores poco saturados e hielos azules. Entre dos y cuatro gigantes por sector, 299 en total, diámetro 300–480, más mineral y más tiempo de minería. Espectrómetro de materiales ID 13, utilidad, compra 2.600/venta 1.300, stock 2: TAB equipado muestra una instantánea de todos los materiales restantes, incluidos especiales, sin ubicaciones. 232 entradas de puerta con margen exterior 200–500 y zonas despejadas; tráfico y respawn adaptados. Catálogos y guardados antiguos compatibles, sin desplazar IDs. Mapas y documentación actualizados.
+
+**Verificación.** Nuevas regresiones de catálogo, gigantes, márgenes, llegada, cantidades, compra, equipamiento, guardado/carga y migración. 46 naves por 16 estaciones: 5.484 atraques manuales y 736 automáticos por edición. Imágenes, alfa y renderizados inspeccionados. Detalle en lore/maps/exploracion-0.1.17.md; prompts de generación integrados junto al catálogo. Los efectos pendientes de los otros ambientes no se implementan.
+
+## 0.1.16 · Nube criogénica y Termorregulador Boreal
+
+**Pedido.** Asociar criogenia a sistemas de hielo, ralentizar progresivamente a las naves, añadir inmunidad de utilidad y efecto de escarcha, y registrar otros pendientes en GitHub Projects/In progress.
+
+**Trabajo realizado.** Verificadas las 17 asignaciones de hielo a cryo-cloud. Reducción de velocidad de 10 % al entrar y 10 puntos por minuto, máximo 80 %. Exposición individual por visita para jugador/NPC, incluidos mercantes. Reinicio al cambiar de sistema; contador pausado atracado/con las pausas existentes. Termorregulador Boreal (ID 12, utilidad, compra 1.800/venta 900, dos unidades iniciales por estación) anula ralentización y escarcha al equiparse. Máscara cristalina proporcional, sobre el alfa de la nave y HUD de frío. Exposición del jugador/mercante persistida y migración de mercados/guardados antiguos. Detector raro permanece sin stock. No cambian sprites, colisiones, atributos ni hardpoints.
+
+**Pendientes.** Seis fichas añadidas a In progress de Projects: otros ambientes, ensamblaje/salvaging, hangares, territorios/facciones, barras de escudo y mejoras industriales/detector. Alcance en documentation/pendientes.md. Los otros ambientes aún no reciben efectos. No se ha publicado código.
+
+**Verificación.** Criogenia: escalones/límite, inmunidad equipada, NPC nuevos/protegidos, compra, guardado/carga, mercantes, salida por puertas y cambio de sistema. C# --smoke completo y seis regresiones Godot pasan, incluidas 5.300 pruebas manuales/690 de autoatraque. Escarcha renderizada e inspeccionada en ambas ediciones. Reglas y láminas en lore/maps/criogenia.md.
+
+## 0.1.15 · Comando sector_stats
+
+**Pedido.** Activar y ocultar estadísticas del sector desde consola con valores 1 y 0.
+
+**Trabajo realizado.** Nuevo comando sector_stats 0/1, autocompletado del nombre y valores con Tab. Panel superior derecho junto al minimapa: nombre, cantidad y destinos de conexiones, NPC vivos y perfil exacto del fondo. Datos actuales en cada dibujo; incluye conexiones no exploradas por ser depuración. Desactivado al arrancar, sin persistencia. Disponible en Godot y C#.
+
+**Verificación.** Regresión de los 100 sectores, activación/desactivación, valor inválido y autocompletado; C# --smoke completo superado. Ejecutables 0.1.15.
+
+## 0.1.14 · Atraque de Ocaso y auditoría de flota
+
+**Pedido.** Corregir el atraque de Ocaso y revisar otras naves con conflictos.
+
+**Trabajo realizado.** Ocaso no cumplía90 % de cobertura en los puertos normales:67deancho frente a58delpuerto. La selección ahora comprueba dimensiones y despeje del casco/entrada, usando capitales cuando una nave menor no dispone de un normal compatible. Ocaso sigue siendo Battleship y conserva sus atributos. Un puerto normal personalizado suficientemente ancho sigue siendo válido. Se protege la lista vacía y se remapean atraques antiguos incompatibles. La compatibilidad se cachea sin persistirla.
+
+**Corrección adicional Godot.** Se duplica Image antes de redimensionar fondos/rotar/crear escudos, para no mutar imágenes compartidas. Cénit conserva su máscara original860×860, eliminando colisiones falsas detectadas con Covetor, Luminaria e Incandescencia.
+
+**Verificación.** Las46naves frente a15estaciones:5.300casos manuales y690automáticos por edición, con ambos sentidos de atraque, colisiones, puertos personalizados, remapeo y ausencia de puertos. C# --smoke y Godot test-docking.gd pasan. Informe en lore/fleets/atraques-0.1.14.md. No se cambian posiciones/tamaños de puertos ni atributos/hardpoints del usuario.
+
+## 0.1.13 · Ocho ambientes para todo el mapa
+
+**Pedido.** Crear cuatro bocetos adicionales para disponer de ocho ambientes y aplicar uno a cada sector.
+
+**Trabajo realizado.** Aurora solar, Vacío profundo, Nube criogénica y Tormenta iónica amplían los cuatro tipos originales. Se asignan fondos a los 100 sectores; los 17 sistemas de hielo usan Nube criogénica. Nácar y Vesper conservan sus variantes históricas. PNG transparentes, bordes suaves y opacidad por perfil, compatibles con los perfiles antiguos de siete columnas. Se mantienen paralaje, estrellas y legibilidad. Catálogo y lámina de ocho tipos, prompts de generación, tabla de sectores y mapa PNG con leyenda de ambientes. Fondos puramente visuales: no cambian conexiones, facciones o recursos.
+
+**Verificación.** C# --smoke y Godot test-backgrounds.gd comprueban cobertura, recursos, bordes y las variantes preservadas. Se renderizan los ocho perfiles en ambas ediciones; se revisan escenas de juego y lámina/mapa. Regresiones de Cluster01 e industria superadas. Ejecutables 0.1.13 en raíz.
+
+## 0.1.12 · Pérdidas sólo en refinado
+
+**Pedido.** Procesado, fabricación y futuro ensamblaje al 100 %, sin pérdidas; sólo el refinado pierde material.
+
+**Trabajo realizado.** Se fija el rendimiento de toda etapa distinta de Refinado al 100 %, incluso si datos históricos de estación indican otro valor. Refinado conserva recuperación 95 % y eficiencia inicial de estación 80 % (10 U de cobre → 7,6 U). Se conservan saldos y partidas anteriores. Configuración, pruebas, tabla Markdown y PNG actualizados. El ensamblaje sigue pendiente, con regla de eficiencia 100 % documentada.
+
+**Verificación.** C# --smoke y regresión industrial de Godot: 65 recetas, componentes completos y electrólisis sin pérdidas; refinado y persistencia conservados. Ejecutables 0.1.12 en raíz.
+
+## 0.1.11 · Etapas industriales y eficiencia de estación
+
+**Pedido.** Aclarar refinado y procesado/fabricación, reclasificar productos, añadir tritio/xenón escasos y componentes del esquema, y trasladar la eficiencia de producción a cada estación. Ensamblaje final y artefactos quedan pendientes.
+
+**Trabajo realizado.** Catálogo de 88 entradas: 23 brutos, 36 procesados y 29 componentes; 65 recetas. Nuevos combustibles escasos con composición determinista y stock inicial cero, conservando el 80 % de hielo agua/metano. Se incorporan blindaje, condensadores, bodegas, informática, hangares, montajes, regulación, reactores, mantenimiento, drones, sensores, armamento y propulsión. No modifican hardpoints ni permisos de cazas. Las recetas guardan producción de diseño; el refinado aplica recuperación general 95 % y después eficiencia de estación. Todas parten de 80 % en refinado/fabricación, configurables por estación. Se conservan fracciones con precisión 0,0001 U, visibles y persistentes, utilizables al completar unidades. Diez U de cobre producen 7,6 U al 80 % o 9,5 U al 100 %. Se migran inventarios de diez/71 materiales y guardados previos, sin renumerar IDs. Imagen y tablas actualizadas en lore/industry.
+
+**Verificación.** Pruebas de las 65 recetas, cálculos independientes de eficiencia, conservación por lotes, progreso parcial, persistencia y migración, nuevos combustibles y proporción de hielo. C# supera --smoke y Godot test-industry.gd y test-cluster.gd. Revisión de interfaz y tabla visual. Ejecutables 0.1.11 en raíz; actualizados documentación y Lighthouse.
+
+## 0.1.10 · Materiales, especiales ocultos e industria
+
+**Pedido.** Clasificar combustibles, construcción y especiales; añadir cinco elementos y seis minerales ficticios, conservar salvaging, sortear trazas ocultas por sesión y definir detector raro y crafting con documentación visual.
+
+**Trabajo realizado.** Catálogo compartido de 71 materiales/productos, incluidos 21 recursos brutos. Tungsteno, cromo, cobalto, magnesio y molibdeno amplían construcción; tierras raras pasan a especiales junto con veltrita, naurita, oraxita, silexio, terina y cuarión. Se distribuyen depósitos de 1–3 U en 3–7 asteroides vivos por sector al iniciar/cargar; TAB normal no los muestra. Sólo una nueva carga redistribuye depósitos: el respawn no los repone. Detector de trazas ID 11 de utilidad, sin stock, equipo inicial, portadores ni drops. Industria de estación [F] implementa 50 recetas y lotes de 1/10 con consumo atómico y almacén persistente: refinado, electrólisis/pirólisis, aleaciones, placas, tubos, chips y componentes avanzados para futuro ensamblaje. Mercados paginados y vista de materiales. Se preservan IDs antiguos, prefijos de guardado y salvaging. El PNG y las tablas están en lore/industry. El servicio es instantáneo y gratuito por ahora; no ensambla naves ni módulos equipables.
+
+**Corrección.** C# admite guardados de 26 líneas generados desde 0.1.9, además de los formatos anteriores.
+
+**Verificación.** C# supera --smoke con todas las recetas, trazas, detector, no reposición, guardado/carga y migración. Godot supera test-industry.gd y la regresión de Cluster01; se renderiza la nueva interfaz y se revisa el PNG de recetas. Las partidas y fichas originales se comprueban mediante hashes. Se generan ambos ejecutables 0.1.10.
+
+## 0.1.9 · Cluster01 y alcance FTL de Carrier
+
+**Pedido.** Añadir el clúster de la referencia con acceso por 4110, nombres propios, sistemas de hielo y estaciones según el tipo de marco. Triplicar el alcance FTL de Carrier y actualizar el mapa.
+
+**Trabajo realizado.** Se incorporan 91 sectores, 17 de hielo y 6 con estación, para un total de 100 sectores, 116 enlaces y 15 estaciones. Se conservan los enlaces e IDs anteriores. Las dos entradas nuevas parten de 4110. Los sectores quedan sin facción asignada. Los sistemas de hielo tienen 512 de 640 asteroides de agua/metano. El rasgo long_ftl de los seis Carrier multiplica por tres el rango: 9 enlaces con el módulo actual; recarga de 300 s y bloqueo de escudo de 60 s. El mapa admite zoom y desplazamiento, distingue estaciones e hielo y usa los códigos nuevos. La consola tp acepta nombres de sector. Se elimina el límite de bits para descubrimiento y rutas, conservando la lectura de partidas anteriores. Se entrega el PNG actualizado y la correspondencia con la referencia.
+
+**Verificación.** Pruebas de conectividad, puertas, estaciones, composición de hielo, alcance FTL y descubrimiento sobre índices altos. C# supera --smoke; Godot supera build/test-cluster.gd, incluida migración de una partida de nueve sectores. Se generan y comprueban ambos ejecutables.
+
+## 0.1.8 · Flota del Imperio de Helión
+
+**Pedido.** Añadir once naves de Helión con las clases indicadas en los PNG y atributos propios. Mantener la restricción de cazas en todas las clases menores de Carrier salvo rasgo específico.
+
+**Trabajo realizado.** El catálogo crece de 35 a 46 cascos. Los IDs 35–45 incorporan dos Fragatas, tres Cruceros, tres Battleships, un Dreadnought y dos Carrier. Se asignan nombres, casco, masa, empuje, longitud, carga y ranuras. Los PNG se integran en assets/ships y la interfaz muestra la facción Helión. Los catálogos de ambas ediciones coinciden y shipConfigurator 1.6 lee los cascos nuevos. Las fichas de hardpoints quedan para el usuario. Se comprobaron las direcciones de equipo, la ampliación de escudos guardados y las reglas de cazas.
+
+**Corrección dentro de 0.1.8.** Se sustituye el PNG de Luminaria (ID 39, Crucero03) por «Portaaviones espacial industrial desde arriba.png», solicitado por el usuario. Se recompilan ambas ediciones con la misma versión.
+
+## 0.1.7 · Clase Carrier y permisos de hangar
+
+**Pedido.** Reclasificar Firmamento, Leviatán, Nyx y Chimera como Carrier. Reservar los cazas para Carrier y Titán, con una excepción por rasgo para futuras naves menores. Dreadnought conserva los drones.
+
+**Trabajo realizado.** Los cuatro cascos pasan a Carrier, claseID 5. Titán reserva claseID 6. Se actualizan ambos catálogos, la carga de anclajes y shipConfigurator 1.6. El rasgo fighter_hangar habilita cazas mediante el parámetro habilita_cazas. Los anclajes incompatibles se conservan en las fichas y se omiten al cargar el juego. Los atraques capitales admiten los Carrier. Se verificaron los 35 cascos, la excepción por rasgo y la lectura de anclajes antiguos. El vuelo y recuperación de cazas y drones siguen pendientes.
+
 ## 0.1.6 · Ambientes por sector
 
 **Pedido.** Documentar los seis conceptos de fondo y preparar los cuatro bocetos para futuros sistemas.

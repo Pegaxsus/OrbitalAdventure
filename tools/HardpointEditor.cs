@@ -13,7 +13,7 @@ sealed class HardpointEditor : Form
     {
         public int Id, Rotation, Weapons, ClassId;
         public string Sprite, Name;
-        public bool NoDirectTools;
+        public bool NoDirectTools, FighterHangar;
         public override string ToString() { return Id + " · " + Name; }
     }
 
@@ -53,6 +53,7 @@ sealed class HardpointEditor : Form
     readonly Label status = new Label { Dock = DockStyle.Bottom, Height = 32, Padding = new Padding(12,6,0,0) };
     readonly List<Mount> mounts = new List<Mount>();
     readonly string project;
+    bool fighterHangarEnabled;
     Ship selected;
     Bitmap sprite;
     string spritePath;
@@ -62,7 +63,7 @@ sealed class HardpointEditor : Form
     HardpointEditor(string projectDirectory)
     {
         project = projectDirectory;
-        Text = "shipConfigurator 1.5 · Hangar Orbital";
+        Text = "shipConfigurator 1.6 · Hangar Orbital";
         ClientSize = new Size(1120,740);
         MinimumSize = new Size(950,560);
         Font = new Font("Segoe UI",10);
@@ -109,6 +110,17 @@ sealed class HardpointEditor : Form
         };
         FormClosing += delegate(object sender, FormClosingEventArgs e) { e.Cancel = !ConfirmChanges(); };
 
+        string traitsPath = Path.Combine(project,"attributes","ship-traits.txt");
+        if (File.Exists(traitsPath))
+            foreach (var line in File.ReadAllLines(traitsPath,Encoding.UTF8))
+            {
+                var values = line.Split(',');
+                float enabled;
+                if (values.Length == 3 && values[0] == "fighter_hangar" && values[1] == "habilita_cazas"
+                    && float.TryParse(values[2],NumberStyles.Float,Numbers,out enabled))
+                    fighterHangarEnabled = enabled > 0;
+            }
+
         var catalog = File.ReadAllLines(Path.Combine(project,"attributes","ships-godot.txt"),Encoding.UTF8);
         for (int i = 1; i < catalog.Length; i++)
         {
@@ -116,7 +128,8 @@ sealed class HardpointEditor : Form
             string[] row = catalog[i].Split(',');
             shipPicker.Items.Add(new Ship { Id = int.Parse(row[0]), Sprite = row[1],
                 Rotation = int.Parse(row[2]), Name = row[12], Weapons = int.Parse(row[8]), ClassId = int.Parse(row[14]),
-                NoDirectTools = Array.IndexOf(row[15].Split('|'),"no_direct_tools")>=0 });
+                NoDirectTools = Array.IndexOf(row[15].Split('|'),"no_direct_tools")>=0,
+                FighterHangar = Array.IndexOf(row[15].Split('|'),"fighter_hangar")>=0 });
         }
         shipPicker.SelectedIndexChanged += ChangeShip;
         if (shipPicker.Items.Count > 0) shipPicker.SelectedIndex = 0;
@@ -417,7 +430,7 @@ sealed class HardpointEditor : Form
     bool AllowsMount(string kind)
     {
         if (kind.StartsWith("hangar_cazas_", StringComparison.Ordinal))
-            return selected.ClassId == 4 || selected.ClassId == 5;
+            return selected.ClassId == 5 || selected.ClassId == 6 || (selected.FighterHangar && fighterHangarEnabled);
         if (kind.StartsWith("hangar_drones_", StringComparison.Ordinal))
             return true;
         return !selected.NoDirectTools || kind=="motor" || kind=="misil" || kind=="cohete";
@@ -454,7 +467,8 @@ sealed class HardpointEditor : Form
             count[mount.Kind] = index+1;
             list.Items.Add(string.Format(Numbers,"{0} {1}   ({2:0.000}, {3:0.000})",
                 mount.Kind,index,mount.Position.X,mount.Position.Y) +
-                (IsRamp(mount.Kind) ? string.Format(Numbers,"   {0:0.#}°",mount.Bearing) : ""));
+                (IsRamp(mount.Kind) ? string.Format(Numbers,"   {0:0.#}°",mount.Bearing) : "") +
+                (AllowsMount(mount.Kind) ? "" : " · no compatible"));
         }
         canvas.Invalidate();
     }
@@ -578,12 +592,23 @@ sealed class HardpointEditor : Form
                 if (Math.Abs(editor.mounts[ramp].Bearing-90)>3) Environment.ExitCode = 1;
                 editor.platformPreview.Checked = true;
                 int originalClass = editor.selected.ClassId;
-                foreach (int capitalClass in new[] {4,5})
+                foreach (int capitalClass in new[] {5,6})
                 {
                     editor.selected.ClassId = capitalClass;
                     for (int i = 7; i < Kinds.Length; i++)
                         if (!editor.AllowsMount(Kinds[i])) Environment.ExitCode = 1;
                 }
+                editor.selected.ClassId = 4;
+                for (int i = 7; i < Kinds.Length; i++)
+                    if (editor.AllowsMount(Kinds[i]) != (i < 10)) Environment.ExitCode = 1;
+                editor.selected.ClassId = 1;
+                editor.selected.FighterHangar = true;
+                editor.fighterHangarEnabled = true;
+                for (int i = 7; i < Kinds.Length; i++)
+                    if (!editor.AllowsMount(Kinds[i])) Environment.ExitCode = 1;
+                editor.fighterHangarEnabled = false;
+                if (editor.AllowsMount("hangar_cazas_rampa")) Environment.ExitCode = 1;
+                editor.selected.FighterHangar = false;
                 editor.selected.ClassId = originalClass;
                 if (!editor.Save()) Environment.ExitCode = 1;
                 using (var preview = new Bitmap(editor.canvas.Width,editor.canvas.Height))

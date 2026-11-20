@@ -1,4 +1,8 @@
 .godot/
 savegames/
+releases/
 *.exe
 *.pck
+build/.*runtime*/
+build/*.log
+build/*-preview-*.png

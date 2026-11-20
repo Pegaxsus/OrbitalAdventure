@@ -30,3 +30,6 @@ nave,23,laser,4,-0.01296,-0.11075
 nave,23,ametralladora,4,-0.01296,-0.11075
 nave,23,mineria,4,-0.01296,-0.11075
 nave,23,salvaging,4,-0.01296,-0.11075
+nave,23,hangar_drones_plataforma,0,0.00370,-0.01466
+nave,23,hangar_drones_tubo,0,0.42592,-0.06026
+nave,23,hangar_drones_tubo,1,-0.42592,-0.06026

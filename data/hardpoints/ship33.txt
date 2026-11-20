@@ -42,3 +42,9 @@ nave,33,hangar_drones_tubo,4,-0.41402,0.24756
 nave,33,hangar_drones_tubo,5,0.41402,0.24756
 nave,33,hangar_cazas_tubo,4,-0.41402,0.24756
 nave,33,hangar_cazas_tubo,5,0.41402,0.24756
+nave,33,motor,15,-0.45224,0.46417
+nave,33,motor,16,0.45224,0.46417
+nave,33,motor,17,-0.31211,0.49674
+nave,33,motor,18,0.31211,0.49674
+nave,33,motor,19,-0.10828,0.49349
+nave,33,motor,20,0.10828,0.49349

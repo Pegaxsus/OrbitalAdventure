@@ -1,0 +1,11 @@
+entidad,id,tipo,indice,x,y
+nave,35,misil,0,0.00000,-0.21498
+nave,35,laser,0,0.00000,-0.21498
+nave,35,ametralladora,0,0.00000,-0.21498
+nave,35,mineria,0,0.00000,-0.21498
+nave,35,salvaging,0,0.00000,-0.21498
+nave,35,motor,0,0.13192,0.31270
+nave,35,motor,1,-0.13192,0.31270
+nave,35,cohete,0,0.00000,-0.29479
+nave,35,hangar_drones_tubo,0,0.29805,0.11238
+nave,35,hangar_drones_tubo,1,-0.29805,0.11238

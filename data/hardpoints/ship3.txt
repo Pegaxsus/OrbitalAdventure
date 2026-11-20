@@ -13,3 +13,5 @@ nave,3,cohete,0,0.15617,-0.48371
 nave,3,cohete,1,-0.15617,-0.48371
 nave,3,motor,0,0.11330,0.48860
 nave,3,motor,1,-0.11330,0.48860
+nave,3,hangar_drones_tubo,0,0.40421,0.16287
+nave,3,hangar_drones_tubo,1,-0.40421,0.16287

@@ -1,0 +1,17 @@
+entidad,id,tipo,indice,x,y
+nave,13,hangar_drones_tubo,0,0.28072,0.06515
+nave,13,hangar_drones_tubo,1,-0.28072,0.06515
+nave,13,misil,0,0.22304,-0.13844
+nave,13,misil,1,-0.22304,-0.13844
+nave,13,motor,0,0.36532,0.47068
+nave,13,motor,1,-0.36532,0.47068
+nave,13,laser,0,0.23073,-0.30293
+nave,13,laser,1,-0.23073,-0.30293
+nave,13,ametralladora,0,0.23073,-0.30293
+nave,13,ametralladora,1,-0.23073,-0.30293
+nave,13,mineria,0,0.23073,-0.30293
+nave,13,mineria,1,-0.23073,-0.30293
+nave,13,salvaging,0,0.23073,-0.30293
+nave,13,salvaging,1,-0.23073,-0.30293
+nave,13,cohete,0,0.11152,-0.40879
+nave,13,cohete,1,-0.11152,-0.40879

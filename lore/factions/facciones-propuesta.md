@@ -1,6 +1,6 @@
 # Seis facciones · Propuesta de ambientación
 
-Propuesta del 10 de noviembre de 2026. Pendiente de aprobación para su integración. Los nombres, colores y relaciones se presentan como material editorial. El juego todavía usa sus roles actuales de NPC.
+Propuesta editorial del 10 de noviembre de 2026. Asterión ya tiene territorio y flota implementados. Desde 0.1.8, Helión tiene once cascos incorporados al catálogo. Sus territorios y las demás propuestas siguen pendientes. Los roles actuales de NPC se mantienen.
 
 ## Marco común
 

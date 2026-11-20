@@ -13,3 +13,11 @@ nave,22,motor,0,0.05546,0.47557
 nave,22,motor,1,-0.05546,0.47557
 nave,22,motor,2,0.02884,0.47557
 nave,22,motor,3,-0.02884,0.47557
+nave,22,hangar_drones_tubo,0,0.15973,-0.08306
+nave,22,hangar_drones_tubo,1,-0.15973,-0.08306
+nave,22,hangar_cazas_tubo,0,0.15973,-0.08306
+nave,22,hangar_cazas_tubo,1,-0.15973,-0.08306
+nave,22,hangar_drones_tubo,2,0.14642,-0.13518
+nave,22,hangar_drones_tubo,3,-0.14642,-0.13518
+nave,22,hangar_cazas_tubo,2,0.14642,-0.13518
+nave,22,hangar_cazas_tubo,3,-0.14642,-0.13518

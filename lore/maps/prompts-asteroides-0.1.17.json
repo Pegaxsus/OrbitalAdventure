@@ -1,0 +1,163 @@
+[
+  {
+    "key": "water_ice",
+    "name": "WATER ICE",
+    "asset": "assets/asteroids/materials/water_ice.png",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Create ONE production game sprite: a single WATER ICE asteroid for a top-down 2D space game, isolated in the exact center on genuinely transparent background. Chunky irregular asymmetrical broken ice boulder, pale desaturated blue cyan ice, translucent-looking fractured faces, some dirty gray rocky inclusions. Hand-painted detailed pixel-art-like texture readable when downscaled to 64 pixels, consistent upper-left lighting, clear jagged silhouette. Orthographic top view, no perspective scene. Fill about 76 percent of a square canvas, generous empty transparent margin all around. One object only. No labels, no lettering, no frame, no space background, no glow halo, no cast shadow outside silhouette."
+  },
+  {
+    "key": "copper",
+    "name": "COPPER ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE COPPER ORE ASTEROID. gray-brown rock with low-saturation copper seams and faint oxidized teal traces. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/copper.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "carbon",
+    "name": "CARBON",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE CARBON ASTEROID. almost charcoal black porous asteroid with muted graphite silver fractures. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/carbon.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "iron",
+    "name": "IRON ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE IRON ORE ASTEROID. dark gray rock with dull rust-brown iron bands and restrained metallic flecks. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/iron.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "nickel",
+    "name": "NICKEL ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE NICKEL ORE ASTEROID. cool gray metallic rock with very subtle desaturated olive mineral seams. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/nickel.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "rare_earths",
+    "name": "RARE EARTH MINERALS",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE RARE EARTH MINERALS ASTEROID. slate gray boulder with small muted violet and pale ochre mineral veins. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/rare_earths.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "aluminium",
+    "name": "ALUMINIUM ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE ALUMINIUM ORE ASTEROID. light gray rock with muted chalky cream and silvery aluminum mineral seams. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/aluminium.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "titanium",
+    "name": "TITANIUM ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE TITANIUM ORE ASTEROID. dense slate rock with subdued steel blue and silver mineral plates. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/titanium.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "tungsten",
+    "name": "TUNGSTEN ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE TUNGSTEN ORE ASTEROID. heavy dark steel gray boulder with dense muted pewter veins. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/tungsten.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "molybdenum",
+    "name": "MOLYBDENUM ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE MOLYBDENUM ORE ASTEROID. dark gray layered rock with subdued blue-gray metallic lamellae. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/molybdenum.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "methane",
+    "name": "METHANE ICE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE METHANE ICE ASTEROID. desaturated deep blue and misty blue-gray frozen methane with opaque frosted crust, visibly icy. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/methane.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "chromium",
+    "name": "CHROMIUM ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE CHROMIUM ORE ASTEROID. gray-black rocky boulder with subdued silvery gray-green chromium seams. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/chromium.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "cobalt",
+    "name": "COBALT ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE COBALT ORE ASTEROID. dark slate gray rock with small desaturated dusty blue mineral veins. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/cobalt.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "silicon",
+    "name": "SILICON ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE SILICON ORE ASTEROID. pale gray stony boulder with smoky translucent silicate crystal faces. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/silicon.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "veltrite",
+    "name": "VELTRITE fictional ore",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE VELTRITE fictional ore ASTEROID. gray asteroid with sparse dusty muted teal crystal seams, plausible mineral geology. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/veltrite.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "naurite",
+    "name": "NAURITE fictional ore",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE NAURITE fictional ore ASTEROID. gray asteroid with sparse low-saturation dusty lilac crystal inclusions. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/naurite.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "oraxite",
+    "name": "ORAXITE fictional ore",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE ORAXITE fictional ore ASTEROID. gray asteroid with restrained dusty amber mineral veins. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/oraxite.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "silexium",
+    "name": "SILEXIUM fictional ore",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE SILEXIUM fictional ore ASTEROID. gray asteroid with pale muted mint silicate crystals. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/silexium.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "tritium",
+    "name": "TRITIUM-BEARING ICE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE TRITIUM-BEARING ICE ASTEROID. dirty ice asteroid with low-saturation pale cyan and gray-blue ice fractures, no neon radiation. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/tritium.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "theryne",
+    "name": "THERYNE fictional ore",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE THERYNE fictional ore ASTEROID. gray asteroid with restrained desaturated rose mineral seams. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/theryne.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "xenon",
+    "name": "XENON-BEARING ICE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE XENON-BEARING ICE ASTEROID. dense gray-blue frozen volatile clathrate asteroid with desaturated pale blue frosted faces. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/xenon.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "magnesium",
+    "name": "MAGNESIUM ORE",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE MAGNESIUM ORE ASTEROID. light gray porous rock with muted warm cream mineral layers. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/magnesium.png",
+    "mode": "built-in image_gen"
+  },
+  {
+    "key": "quarion",
+    "name": "QUARION fictional ore",
+    "prompt": "Use case: stylized-concept. Production game sprite, ONE QUARION fictional ore ASTEROID. gray asteroid with smoky desaturated indigo quartz-like crystals. A single irregular asymmetrical fractured asteroid boulder isolated centrally on genuinely transparent background. Top-down orthographic 2D space game sprite, detailed hand-painted pixel-art-like surface, crisp readable chunky form when scaled to 64 pixels, soft consistent light from upper left. Mostly neutral stone with ONLY low-saturation mineral accents. Fill 88 percent of square canvas leaving transparent margin, no cropped edges. No text, no labels, no scene, no stars, no floor, no external cast shadow, no halo, no neon colors. ONE isolated asteroid only. Match a restrained industrial space game art direction.",
+    "asset": "assets/asteroids/materials/quarion.png",
+    "mode": "built-in image_gen"
+  }
+]

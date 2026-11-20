@@ -1,0 +1,11 @@
+profile,family,name,color
+gas-arc,gas-arc,Arco de gas,#1CA9AD
+dust-veil,dust-veil,Velo de polvo,#B78645
+planet-limb,planet-limb,Límite planetario,#437CD0
+supernova-remnant,supernova-remnant,Remanente de supernova,#AA70C4
+solar-aurora,solar-aurora,Aurora solar,#DDBA4F
+deep-void,deep-void,Vacío profundo,#64728B
+cryo-cloud,cryo-cloud,Nube criogénica,#70CADF
+ion-storm,ion-storm,Tormenta iónica,#5CB786
+nacar,gas-arc,Nácar (variante),#1CA9AD
+vesper,supernova-remnant,Vesper (variante roja),#AA70C4

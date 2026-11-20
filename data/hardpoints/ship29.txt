@@ -12,3 +12,9 @@ nave,29,salvaging,1,-0.34947,-0.25407
 nave,29,motor,0,0.00000,0.48208
 nave,29,cohete,0,-0.17929,-0.32899
 nave,29,cohete,1,0.17929,-0.32899
+nave,29,motor,1,-0.18841,0.46906
+nave,29,motor,2,0.18841,0.46906
+nave,29,hangar_drones_tubo,0,0.29781,0.06189
+nave,29,hangar_drones_tubo,1,-0.29781,0.06189
+nave,29,hangar_drones_tubo,2,0.27350,-0.04886
+nave,29,hangar_drones_tubo,3,-0.27350,-0.04886

@@ -23,3 +23,7 @@ nave,19,cohete,0,0.06678,-0.35993
 nave,19,cohete,1,-0.06678,-0.35993
 nave,19,cohete,2,0.02117,-0.36156
 nave,19,cohete,3,-0.02117,-0.36156
+nave,19,hangar_drones_tubo,0,0.21824,0.11401
+nave,19,hangar_drones_tubo,1,-0.21824,0.11401
+nave,19,hangar_drones_tubo,2,0.20521,0.04397
+nave,19,hangar_drones_tubo,3,-0.20521,0.04397

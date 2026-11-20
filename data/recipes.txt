@@ -1,0 +1,66 @@
+id,key,name,stage,inputs,outputs
+0,ref_water_ice,Refinar Hielo de agua,Refinado,0:10,21:10
+1,ref_methane,Refinar Metano,Refinado,1:10,22:10
+2,ref_iron,Refinar Hierro,Refinado,2:10,23:10
+3,ref_aluminium,Refinar Aluminio,Refinado,3:10,24:10
+4,ref_titanium,Refinar Titanio,Refinado,4:10,25:10
+5,ref_copper,Refinar Cobre,Refinado,5:10,26:10
+6,ref_silicon,Refinar Silicio,Refinado,6:10,27:10
+7,ref_carbon,Refinar Carbono,Refinado,7:10,28:10
+8,ref_nickel,Refinar Níquel,Refinado,8:10,29:10
+9,ref_rare_earths,Refinar Tierras raras,Refinado,9:2,30:2
+10,ref_tungsten,Refinar Tungsteno,Refinado,10:10,31:10
+11,ref_chromium,Refinar Cromo,Refinado,11:10,32:10
+12,ref_cobalt,Refinar Cobalto,Refinado,12:10,33:10
+13,ref_magnesium,Refinar Magnesio,Refinado,13:10,34:10
+14,ref_molybdenum,Refinar Molibdeno,Refinado,14:10,35:10
+15,ref_veltrite,Refinar Veltrita,Refinado,15:2,36:2
+16,ref_naurite,Refinar Naurita,Refinado,16:2,37:2
+17,ref_oraxite,Refinar Oraxita,Refinado,17:2,38:2
+18,ref_silexium,Refinar Silexio,Refinado,18:2,39:2
+19,ref_theryne,Refinar Terina,Refinado,19:2,40:2
+20,ref_quarion,Refinar Cuarión,Refinado,20:2,41:2
+21,electrolysis,Electrólisis del agua,Procesamiento,21:9,42:1|43:8
+22,pyrolysis,Pirólisis del metano,Procesamiento,22:4,28:3|42:1
+23,steel,Acería,Procesamiento,23:99|28:1,44:100
+24,stainless,Acero inoxidable,Procesamiento,44:7|32:2|29:1,45:10
+25,superalloy,Superaleación de motor,Procesamiento,29:5|33:3|32:1|35:1,46:10
+26,al_mg,Aleación ligera,Procesamiento,24:9|34:1,47:10
+27,wc,Sinterizado de carburo,Procesamiento,31:9|28:1,48:10
+28,copper_bar,Extruir barras,Fabricacion,26:2,49:2
+29,wire,Trefilar cable,Fabricacion,49:2,50:2
+30,plate,Laminar acero,Fabricacion,44:3,51:3
+31,ti_plate,Laminar titanio,Fabricacion,25:3,52:3
+32,tube,Formar tubos,Fabricacion,44:2,53:2
+33,frame,Montar bastidor ligero,Fabricacion,47:4|25:1,54:4
+34,glass,Vidrio de silicio,Procesamiento,27:3|43:3,55:6
+35,ceramic,Cerámica técnica,Procesamiento,27:2|28:1|34:1,56:4
+36,chip,Fabricar chips,Fabricacion,49:1|27:2,57:2
+37,circuit,Ensamblar circuito,Fabricacion,57:2|50:2|55:1,58:4
+38,magnet,Sinterizar imanes,Fabricacion,30:1|23:2|33:1,59:3
+39,construction,Lote de construcción,Fabricacion,51:4|53:2|54:2,60:7
+40,hull,Fabricar sección de casco,Fabricacion,60:6|52:3|56:2,61:10
+41,engine,Fabricar conjunto de motor,Fabricacion,46:4|48:2|53:2|58:1,62:8
+42,shield_matrix,Fabricar matriz de escudo,Fabricacion,36:1|37:1|50:2|59:1,63:4
+43,sensor,Fabricar sensor de trazas,Fabricacion,38:1|39:1|57:2|58:1,64:4
+44,ftl_core,Fabricar núcleo FTL,Fabricacion,40:1|41:1|46:3|58:2|59:1,65:7
+45,propellant,Preparar mezcla propulsora,Procesamiento,42:1|43:8,66:9
+46,coolant,Preparar refrigerante,Procesamiento,21:4|28:1,67:5
+47,habitat,Fabricar soporte de hábitat,Fabricacion,60:3|55:2|58:1|21:2|43:2,68:9
+48,drone_frame,Fabricar chasis de dron,Fabricacion,54:3|58:2|59:1|50:1,69:6
+49,station_truss,Fabricar viga de estación,Fabricacion,45:5|53:3|60:2,70:9
+50,ref_tritium,Refinar Tritio,Refinado,71:10,73:10
+51,ref_xenon,Refinar Xenón,Refinado,72:10,74:10
+52,make_armor_plates,Fabricar blindaje compuesto,Fabricacion,51:3|52:2|56:1,75:1
+53,make_capacitor_battery,Fabricar batería de condensadores,Fabricacion,24:2|50:2|28:2|56:1,76:1
+54,make_cargo_bay,Fabricar bodega modular,Fabricacion,54:3|60:4|51:2,77:1
+55,make_computer_system,Fabricar sistema informático,Fabricacion,57:3|58:2|50:1|67:1,78:1
+56,make_weapon_mount,Fabricar montaje de armamento,Fabricacion,51:2|25:1|48:1,80:1
+57,make_core_regulator,Fabricar regulador térmico,Fabricacion,53:3|67:2|58:1,81:1
+58,make_maintenance_bay,Fabricar bahía de mantenimiento,Fabricacion,60:4|54:2|78:1,83:1
+59,make_hangar_bay,Fabricar bahía de hangar,Fabricacion,60:8|54:6|78:2|83:1,79:1
+60,make_reactor_core,Fabricar núcleo de reactor,Fabricacion,46:4|48:2|81:1|78:1|76:1,82:1
+61,make_drone_bay,Fabricar bahía de drones,Fabricacion,54:3|77:1|78:1,84:1
+62,make_sensor_cluster,Fabricar conjunto de sensores,Fabricacion,64:2|78:1|50:2,85:1
+63,make_weapon_components,Fabricar componentes de armamento,Fabricacion,44:3|48:2|57:1,86:1
+64,make_propulsion_system,Fabricar sistema de propulsión,Fabricacion,62:2|81:1|50:2,87:1

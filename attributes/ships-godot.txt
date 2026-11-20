@@ -7,7 +7,7 @@ id,sprite,rotacion,masa,empuje,casco,longitud,bodega,armamento,defensa,utilidad,
 5,ship5.png,0,85,5100,450,99,110,4,2,2,2,Nave 06,Battleship,3,,
 6,ship6.png,0,110,6000,580,112,145,4,2,2,2,Nave 07,Battleship,3,,
 7,ship7.png,0,170,7650,760,125,190,5,3,3,2,Nave 08,Dreadnought,4,,
-8,ship8.png,0,230,9200,960,155,260,5,3,3,2,Leviatán,Dreadnought,4,no_direct_tools,
+8,ship8.png,0,230,9200,960,155,260,5,3,3,2,Leviatán,Carrier,5,no_direct_tools|long_ftl,
 9,ship9.png,0,178,8100,800,138,210,5,3,3,2,Mastodonte,Dreadnought,4,,
 10,ship10.png,0,145,7200,690,127,175,5,3,3,2,Coloso,Dreadnought,4,,
 11,ship11.png,0,26,2300,190,62,47,2,1,2,1,Alción,Crucero,2,,
@@ -20,8 +20,8 @@ id,sprite,rotacion,masa,empuje,casco,longitud,bodega,armamento,defensa,utilidad,
 18,ship18.png,180,48,3600,310,78,155,2,1,2,1,Retriever,Crucero,2,no_ordnance,
 19,ship19.png,180,95,5650,470,94,240,4,2,2,2,Covetor,Battleship,3,no_ordnance,
 20,ship20.png,0,760,19300,1950,242,780,5,3,3,2,Rorqual,Dreadnought,4,gimbal_miners|long_miner|no_ordnance,
-21,ship21.png,0,580,16200,1730,224,290,5,3,3,2,Nyx,Dreadnought,4,no_direct_tools,
-22,ship22.png,0,510,15000,1550,210,280,5,3,3,2,Chimera,Dreadnought,4,no_direct_tools,
+21,ship21.png,0,580,16200,1730,224,290,5,3,3,2,Nyx,Carrier,5,no_direct_tools|long_ftl,
+22,ship22.png,0,510,15000,1550,210,280,5,3,3,2,Chimera,Carrier,5,no_direct_tools|long_ftl,
 23,ship23.png,0,690,17800,2210,232,305,5,3,3,2,Phoenix,Dreadnought,4,,
 24,raptor.png,0,7,910,80,29,14,1,1,1,1,Raptor,Fragata,1,,
 25,manticore.png,0,11,1100,115,32,18,1,1,1,1,Manticore,Fragata,1,double_ordnance,
@@ -32,5 +32,16 @@ id,sprite,rotacion,masa,empuje,casco,longitud,bodega,armamento,defensa,utilidad,
 30,asterion-crucero2.png,0,53,3900,370,83,83,2,1,2,1,Equinoccio,Crucero,2,,asterion
 31,asterion-battleship0.png,0,125,6800,665,114,151,4,2,2,2,Solsticio,Battleship,3,,asterion
 32,asterion-battleship1.png,0,102,5950,565,108,132,4,2,2,2,Eclíptica,Battleship,3,,asterion
-33,asterion-dread0.png,0,780,19800,2400,248,355,5,3,3,2,Firmamento,Dreadnought,4,no_direct_tools,asterion
+33,asterion-dread0.png,0,780,19800,2400,248,355,5,3,3,2,Firmamento,Carrier,5,no_direct_tools|long_ftl,asterion
 34,asterion-dread1.png,0,570,16250,1770,222,276,5,3,3,2,Horizonte,Dreadnought,4,,asterion
+35,helion-fragata01.png,0,12,1200,112,38,24,1,1,1,1,Ascua,Fragata,1,,helion
+36,helion-fragata02.png,0,15,1410,135,42,28,1,1,1,1,Alba,Fragata,1,,helion
+37,helion-crucero01.png,0,34,2950,270,70,58,2,1,2,1,Aurora,Crucero,2,,helion
+38,helion-crucero02.png,0,46,3700,340,80,72,2,1,2,1,Fulgor,Crucero,2,,helion
+39,helion-crucero03.png,0,40,3250,300,76,98,2,1,2,1,Luminaria,Crucero,2,,helion
+40,helion-battleship01.png,0,140,7250,760,124,160,4,2,2,2,Lanza Solar,Battleship,3,,helion
+41,helion-battleship02.png,0,170,8200,870,134,190,4,2,2,2,Ocaso,Battleship,3,,helion
+42,helion-battleship03.png,0,200,9100,1010,144,215,4,2,2,2,Incandescencia,Battleship,3,,helion
+43,helion-dreadnought01.png,0,820,20400,2650,252,390,5,3,3,2,Corona,Dreadnought,4,,helion
+44,helion-carrier01.png,0,790,19200,2320,248,380,5,3,3,2,Sol Invicto,Carrier,5,long_ftl,helion
+45,helion-carrier02.png,0,650,17300,2000,232,345,5,3,3,2,Arca Solar,Carrier,5,long_ftl,helion

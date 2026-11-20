@@ -33,3 +33,7 @@ nave,20,ametralladora,2,0.14002,-0.31107
 nave,20,ametralladora,3,-0.14002,-0.31107
 nave,20,laser,4,-0.00620,-0.40879
 nave,20,ametralladora,4,-0.00620,-0.40879
+nave,20,hangar_drones_tubo,0,0.05948,-0.20521
+nave,20,hangar_drones_tubo,1,-0.05948,-0.20521
+nave,20,hangar_drones_tubo,2,0.05700,-0.25081
+nave,20,hangar_drones_tubo,3,-0.05700,-0.25081

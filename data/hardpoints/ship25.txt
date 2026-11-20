@@ -8,3 +8,6 @@ nave,25,salvaging,0,-0.01325,-0.02769
 nave,25,motor,0,0.32660,0.29805
 nave,25,motor,1,-0.35311,0.29642
 nave,25,motor,2,-0.01169,0.47557
+nave,25,hangar_drones_plataforma,0,0.14966,0.23453
+nave,25,hangar_drones_plataforma,1,-0.14966,0.23453
+nave,25,hangar_drones_plataforma,2,-0.01403,0.29967

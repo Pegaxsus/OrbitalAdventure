@@ -1,0 +1,24 @@
+entidad,id,tipo,indice,x,y
+# rampa,hangar_drones_rampa,0,0.000
+nave,39,hangar_drones_rampa,0,0.00000,-0.07492
+nave,39,hangar_drones_tubo,0,0.18810,-0.17427
+nave,39,hangar_drones_tubo,1,-0.18810,-0.17427
+nave,39,hangar_drones_tubo,2,0.19100,0.00651
+nave,39,hangar_drones_tubo,3,-0.19100,0.00651
+nave,39,hangar_drones_plataforma,0,0.00000,0.25407
+nave,39,misil,0,0.12733,-0.38599
+nave,39,misil,1,-0.12733,-0.38599
+nave,39,laser,0,0.12733,-0.38599
+nave,39,laser,1,-0.12733,-0.38599
+nave,39,ametralladora,0,0.12733,-0.38599
+nave,39,ametralladora,1,-0.12733,-0.38599
+nave,39,mineria,0,0.12733,-0.38599
+nave,39,mineria,1,-0.12733,-0.38599
+nave,39,salvaging,0,0.12733,-0.38599
+nave,39,salvaging,1,-0.12733,-0.38599
+nave,39,cohete,0,0.05788,-0.45928
+nave,39,cohete,1,-0.05788,-0.45928
+nave,39,motor,0,0.10418,0.47068
+nave,39,motor,1,-0.10418,0.47068
+nave,39,motor,2,0.06945,0.46743
+nave,39,motor,3,-0.06945,0.46743

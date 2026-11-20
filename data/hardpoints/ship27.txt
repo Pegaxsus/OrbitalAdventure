@@ -6,3 +6,9 @@ nave,27,mineria,0,0.36994,-0.26384
 nave,27,salvaging,0,-0.37459,-0.26547
 nave,27,laser,0,-0.18846,-0.47720
 nave,27,ametralladora,0,-0.18846,-0.47720
+nave,27,hangar_drones_tubo,0,0.41880,0.16775
+nave,27,hangar_drones_tubo,1,-0.41880,0.16775
+nave,27,hangar_drones_tubo,2,0.40019,0.05049
+nave,27,hangar_drones_tubo,3,-0.40019,0.05049
+nave,27,motor,1,0.14425,0.46417
+nave,27,motor,2,-0.14425,0.46417

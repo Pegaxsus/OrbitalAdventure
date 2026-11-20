@@ -12,3 +12,5 @@ nave,0,mineria,0,-0.23034,-0.46091
 nave,0,salvaging,0,-0.23034,-0.46091
 nave,0,mineria,1,-0.15589,-0.46417
 nave,0,salvaging,1,-0.15589,-0.46417
+nave,0,hangar_drones_tubo,0,0.08951,-0.15309
+nave,0,hangar_drones_tubo,1,-0.08951,-0.15309

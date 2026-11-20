@@ -1,7 +1,12 @@
-# profile,texture,width,height,anchor_x,anchor_y,parallax
+# profile,texture,width,height,anchor_x,anchor_y,parallax,opacity(optional)
 nacar,nebula-4108.png,2100,1340,450,-320,0.18
 vesper,nebula-4115.png,2100,1340,450,-320,0.18
 gas-arc,gas-arc.png,1500,844,-550,-40,0.15
 dust-veil,dust-veil.png,1700,956,0,-620,0.12
 planet-limb,planet-limb.png,1800,1012,520,2000,0.09
 supernova-remnant,supernova-remnant.png,1450,816,540,-60,0.15
+
+solar-aurora,solar-aurora-v2.png,2100,1182,-450,-200,0.10,0.40
+deep-void,deep-void.png,1350,760,-350,200,0.05,0.55
+cryo-cloud,cryo-cloud-v2.png,2000,1126,150,-200,0.10,0.85
+ion-storm,ion-storm.png,1900,1069,-300,100,0.14,0.55

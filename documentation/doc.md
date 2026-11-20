@@ -1,6 +1,6 @@
 # Hangar Orbital · Guía técnica de Godot
 
-Estado documentado en **0.1.6**. Prototipo 2D cenital de escritorio para Windows, desarrollado con **Godot 4.5.1 estándar y GDScript**. El historial está en [releases-godot.md](releases-godot.md). Este documento cubre el proyecto de Godot.
+Estado documentado en **0.1.17**. Prototipo 2D cenital de escritorio para Windows, desarrollado con **Godot 4.5.1 estándar y GDScript**. El historial está en [releases-godot.md](releases-godot.md). Este documento cubre el proyecto de Godot.
 
 ## Arranque y exportación
 
@@ -26,10 +26,10 @@ Revisa la salida en busca de errores de script además del código de salida. La
 | `Godot/main.tscn` | Escena principal con un `Node2D` que ejecuta `game.gd`. |
 | `Godot/game.gd` | Estado y reglas del juego, entrada, simulación, NPC, interfaz dibujada y persistencia. |
 | `Godot/missile.tscn`, `Godot/missile.gd` | Escena compartida por cohetes y misiles. Usa `assets/projectiles/rocket-flight.png` y `assets/projectiles/missile-flight.png` con la proa hacia arriba. La llama se dibuja en coordenadas locales debajo del sprite y cambia de longitud con la edad del proyectil. El misil sale lateralmente según el hardpoint, espera 0,24 s y luego gira hacia el objetivo fijado al disparar. Acelera durante el vuelo y la colisión de segmento detecta naves y asteroides. El misil sigue de frente si pierde el blanco y el cambio de sector limpia los proyectiles. Velocidad inicial, aceleración, daño y radio se exponen en el inspector. |
-| `assets/ships/` | Sprites de las 35 naves. La proa apunta hacia arriba al dibujarse. Godot aplica la rotación indicada en el catálogo al cargar cada PNG. |
+| `assets/ships/` | Sprites de las 46 naves. La proa apunta hacia arriba al dibujarse. Godot aplica la rotación indicada en el catálogo al cargar cada PNG. |
 | `data/hardpoints.txt` | Puntos de anclaje de las estaciones. |
 | `data/hardpoints/ship<ID>.txt` | Puntos de anclaje de un casco. El editor guarda estas fichas. |
-| `shipConfigurator-1.5.exe` | Editor visual para colocar puntos sobre el PNG. Lee el catálogo y el arte de la raíz del proyecto. |
+| `shipConfigurator-1.6.exe` | Editor visual para colocar puntos sobre el PNG. Lee el catálogo y el arte de la raíz del proyecto. |
 | `attributes/ship-traits.txt` | Valores de los rasgos. Cada fila contiene rasgo, parámetro y valor. La edición C# incorpora este mismo archivo. |
 | `attributes/ships-godot.txt` | Catálogo completo de naves. Cada fila relaciona un ID estable con su PNG, su rotación y sus atributos. |
 | `assets/` | Fondo estelar, cinco tamaños de asteroide con dos variantes cada uno, 22 sprites de restos transparentes seis sprites de estación y la lámina `ship-explosion.png`. |
@@ -79,6 +79,7 @@ Los archivos `.uid` y `.import` acompañan al código y los recursos. Guarda los
 | Crucero | 2 | 1 | 2 | 1 |
 | Battleship | 4 | 2 | 2 | 2 |
 | Dreadnought | 5 | 3 | 3 | 2 |
+| Carrier | 5 | 3 | 3 | 2 |
 
 La [ficha visual de la flota](../lore/fleets/flota-0.1.2.png) reúne los sprites y atributos.
 
@@ -89,7 +90,7 @@ Ambas ediciones comparten `hardpoints.txt` para estaciones y una ficha por nave 
 - Para una **nave**, usa `nave`, su ID del catálogo y uno de los tipos `motor`, `ametralladora`, `cohete`, `misil`, `mineria` o `salvaging`. Las coordenadas son fracciones del ancho y largo del sprite ya orientado. `0,0` es el centro. X positiva va a estribor e Y positiva va hacia la popa. Por ejemplo, `nave,20,motor,0,-0.20,0.45` coloca una tobera del Rorqual hacia la izquierda y la popa. Define las toberas consecutivamente desde el índice 0.
 - Para una **estación**, usa `estacion`, el número de sector o `*` para el valor común, `atraque` y el índice de puerto. X e Y se miden en unidades del sector desde el centro de la estación. Un punto de un sector concreto tiene prioridad sobre el valor común.
 
-Abre `shipConfigurator-1.5.exe`, elige una nave, marca los tipos y haz clic sobre el casco. Cada tipo de arma o herramienta admite tantos puntos como ranuras de armamento tenga la nave. Los puntos de motor no tienen límite por ranuras. Solo determinan el número y el origen de las llamas al pulsar W. El empuje se calcula a partir de los atributos de la nave. **Simetría** añade una pareja por tipo fuera del eje si caben ambos puntos. Un clic en el eje añade un punto por tipo.
+Abre `shipConfigurator-1.6.exe`, elige una nave, marca los tipos y haz clic sobre el casco. Cada tipo de arma o herramienta admite tantos puntos como ranuras de armamento tenga la nave. Los puntos de motor no tienen límite por ranuras. Solo determinan el número y el origen de las llamas al pulsar W. El empuje se calcula a partir de los atributos de la nave. **Simetría** añade una pareja por tipo fuera del eje si caben ambos puntos. Un clic en el eje añade un punto por tipo.
 
 Selecciona un punto en la lista y haz clic sobre la nave para moverlo. Con simetría activa también se mueve su pareja si existe. **Esc** vuelve al modo de colocación. **Deshacer** y **Rehacer** están disponibles como botones y con Ctrl+Z y Ctrl+Y. **Guardar ficha** escribe `data/hardpoints/ship<ID>.txt`. El editor aplica la rotación del catálogo. **Cargar PNG** cambia la referencia visual del editor. Para cambiar el sprite del juego, actualiza su catálogo.
 
@@ -97,7 +98,7 @@ Al ejecutar el proyecto desde el editor de Godot se leen las fichas nuevas. Para
 
 ### Hardpoints de hangar
 
-shipConfigurator 1.4 ofrece **Tubo lateral**, **Rampa** y **Plataforma** para drones. Los Dreadnought (claseID 4) y Titanes (claseID 5) también ofrecen esos tres tipos para cazas. La elegibilidad se deriva de claseID en cada casco existente o futuro. Cada hangar guarda sus propios índices y admite varios puntos sin consumir ranuras de armamento.
+shipConfigurator 1.4 ofrece **Tubo lateral**, **Rampa** y **Plataforma** para drones. Desde shipConfigurator 1.6, los Carrier (claseID 5) y Titanes (claseID 6) también ofrecen esos tres tipos para cazas. Dreadnought (claseID 4) admite drones. El rasgo fighter_hangar habilita una excepción por casco si su parámetro habilita_cazas en attributes/ship-traits.txt es mayor que cero. La elegibilidad se deriva de claseID en cada casco existente o futuro. Cada hangar guarda sus propios índices y admite varios puntos sin consumir ranuras de armamento.
 
 - **Tubo lateral**. Marca la boca del tubo en el costado, igual que el origen de un misil lateral.
 - **Rampa**. Marca el centro de la trayectoria. Selecciona la rampa y haz clic derecho hacia el rumbo de despegue. La flecha discontinua muestra el aterrizaje en sentido contrario.
@@ -155,7 +156,7 @@ Las oportunidades de raid pueden incorporar uno o dos piratas. El tráfico inici
 
 El exportado guarda junto a su ejecutable. El editor resuelve la misma carpeta relativa a la raíz del proyecto Godot. Al arrancar y con **F9**, `load_game()` busca `savegames/godot/latest.json` y, si falta, el antiguo `user://sector.json`. **F5** sobrescribe el último guardado de esta edición. Para ensayar cambios en la carga, usa una copia de la partida o una ruta de prueba.
 
-El JSON guarda nave, pintura, modo, motor, Coupled, estado de hangar, estación y puerto de atraque, casco y reserva minera de Salvia, posición, velocidad, orientación, casco, bodega, inventario, posiciones de módulos y sector activo. `crossed` es una máscara de bits por índice de ruta. `fields` guarda filas `[vida, escaneado, progreso, x, y, minado, fundido]`; `sector_loot` guarda `[x, y, recurso, cantidad]`; `wrecks` guarda `[x, y, sprite, ángulo, progreso]`. Cada uno está agrupado por sector. Los campos históricos `field` y `loot` permiten leer partidas del sector único. Los NPC, los disparos y los efectos se reinician al cargar. Las partidas antiguas guardadas en el hangar se sitúan en un puerto de Salvia en el sector inicial; una partida antigua guardada en vuelo conserva la posición.
+El JSON guarda nave, pintura, modo, motor, Coupled, estado de hangar, estación y puerto de atraque, casco y reserva minera de Salvia, posición, velocidad, orientación, casco, bodega, inventario, posiciones de módulos y sector activo. `crossed` conserva la máscara de los diez enlaces anteriores; `crossed_links` guarda una lista de índices sin límite de bits. Al cargar se combinan ambos registros. `fields` guarda filas `[vida, escaneado, progreso, x, y, minado, fundido]`; `sector_loot` guarda `[x, y, recurso, cantidad]`; `wrecks` guarda `[x, y, sprite, ángulo, progreso]`. Cada uno está agrupado por sector. Los campos históricos `field` y `loot` permiten leer partidas del sector único. Los NPC, los disparos y los efectos se reinician al cargar. Las partidas antiguas guardadas en el hangar se sitúan en un puerto de Salvia en el sector inicial; una partida antigua guardada en vuelo conserva la posición.
 
 El campo `module_locations` guarda una posición por instancia de módulo. `module_types` guarda el tipo en el mismo orden y permite varios módulos del mismo tipo. Los índices 0–63 corresponden a la cuadrícula y los siguientes identifican las ranuras por nave, con cinco índices reservados por casco. Las partidas previas reciben los cuatro módulos en la cuadrícula.
 
@@ -211,7 +212,7 @@ Cuando un impacto agota el escudo, un pulso blanco sobre la silueta indica la ro
 
 ### Módulo FTL
 
-FTL usa ID 10 y ranura de utilidad. Cuesta 5.000 Créditos y alcanza hasta tres enlaces por el camino mínimo del grafo. El jugador debe estar en vuelo y abrir M. Un clic en un destino conocido solicita confirmación. Cancelar o Escape no consume carga. Confirmar inicia la salida, pone el cooldown a 300 s y vacía y bloquea el escudo durante 60 s. Tras el bloqueo vuelve la regeneración normal desde cero. El bloqueo se conserva al equipar otro escudo en ese casco. El cooldown es común al jugador y cambiar de módulo o nave no lo evita.
+FTL usa ID 10 y ranura de utilidad. Cuesta 5.000 Créditos y alcanza tres enlaces por el camino mínimo del grafo, o nueve para Carrier con el rasgo long_ftl. El jugador debe estar en vuelo y abrir M. Un clic en un destino conocido solicita confirmación. Cancelar o Escape no consume carga. Confirmar inicia la salida, pone el cooldown a 300 s y vacía y bloquea el escudo durante 60 s. Tras el bloqueo vuelve la regeneración normal desde cero. El bloqueo se conserva al equipar otro escudo en ese casco. El cooldown es común al jugador y cambiar de módulo o nave no lo evita.
 
 update_ftl() administra los tiempos y commit_ftl() cambia de sector al terminar la animación de salida. Se limpia el estado transitorio de combate y se elige una posición de llegada evitando estaciones y asteroides. Los enlaces de puertas no se marcan como cruzados por usar FTL. El guardado incorpora ftl_cooldown y lock en los estados de escudo. La entrada se bloquea durante la breve transición para evitar guardar un salto a medias.
 
@@ -264,7 +265,7 @@ Las naves 09 a 17 se llaman Leviatán, Mastodonte, Coloso, Alción, Azor, Centel
 
 ### Constelación del Imperio de Asterión
 
-El mapa tiene nueve sectores y diez conexiones. Los seis enlaces originales conservan su orden para mantener los bits de descubrimiento de partidas anteriores. Se añaden, en este orden, 4111–4112, 4112–4113, 4113–4115 y 4115–4114. La única puerta entre ambas regiones es 4111–4112. El FTL conserva sus requisitos de destino descubierto y distancia máxima. El escudo `assets/factions/asterion-crest.png` sustituye a los puntos de los cuatro sectores imperiales en el mapa de vuelo.
+La región anterior contiene nueve sectores y diez conexiones; desde 0.1.9 forma parte de una red de 100 sectores y 116 conexiones. Los seis enlaces originales conservan su orden para mantener los bits de descubrimiento de partidas anteriores. Se añaden, en este orden, 4111–4112, 4112–4113, 4113–4115 y 4115–4114. La única puerta entre ambas regiones es 4111–4112. El FTL conserva sus requisitos de destino descubierto y distancia máxima. El escudo `assets/factions/asterion-crest.png` sustituye a los puntos de los cuatro sectores imperiales en el mapa de vuelo.
 
 | Sector | Estación | Tráfico destacado |
 |---|---|---|
@@ -277,7 +278,7 @@ La Ciudadela usa `station1.png` y `station1.hardpoints.txt` con los datos origin
 
 Cada puesto de guardia usa un índice estable de 0 a 2 y un contador de 1.800 segundos de simulación desde que su nave es destruida. El contador avanza aunque el jugador se traslade a otro sector o atraque. Godot persiste estos valores en `guard_wait` y C# los agrega al final de la economía. La capital vuelve a crear sólo las patrullas disponibles al cargar o entrar. Los refuerzos de las tres guardias son escudo de 75 % del casco y un 25 % más de velocidad y aceleración de patrulla. Desde 0.1.0, Vesper genera 3–4 piratas al entrar y revisa cada 10–18 s si debe enviar otra patrulla. Las naves en retirada permiten el relevo.
 
-El destino de un mercante es un índice de estación. La búsqueda de ruta usa el sector que figura en esa estación. Los guardados anteriores que contienen cinco campos de asteroides, pecios y botín se leen por prefijo y los cuatro campos nuevos se inicializan normalmente. Consulta el [mapa 0.0.59](../lore/maps/mapa-estelar-0.0.59.png) para ver todos los enlaces.
+El destino de un mercante es un índice de estación. La búsqueda de ruta usa el sector que figura en esa estación. Los guardados anteriores que contienen cinco campos de asteroides, pecios y botín se leen por prefijo y los cuatro campos nuevos se inicializan normalmente. Consulta el [mapa 0.1.9](../lore/maps/mapa-estelar-0.1.9.png) para ver todos los enlaces.
 
 ### Flota del Imperio de Asterión
 
@@ -291,11 +292,11 @@ Los IDs de ranuras de las naves 0–26 se conservan. Desde el ID 27, la base es 
 
 El FTL cuesta 5.000 Créditos por unidad y se vende por 2.500. Los botones de compra y venta ajustan la fuente al ancho disponible y muestran el precio unitario. Si no hay saldo, el mensaje de compra muestra el coste total de la cantidad solicitada y cuánto falta. Si no hay stock, muestra cuántas unidades quedan. En el caso reportado en Linde, la compra de un FTL con 713 Créditos falla por una diferencia de 4.287.
 
-`assets/gates/jump-gate.png` es el sprite transparente de las puertas. Se dibuja a 134 × 134 unidades, centrado en su posición. El alcance de salto es 110 unidades desde el centro. La etiqueta en vuelo usa el bit del enlace en `crossed` y resuelve el sector opuesto, por lo que indica un destino distinto según el extremo. El panel de objetivo muestra el destino incluso al seleccionar una puerta aún sin cruzar. Seleccionarla no cambia el descubrimiento del mapa.
+`assets/gates/jump-gate.png` es el sprite transparente de las puertas. Se dibuja a 134 × 134 unidades, centrado en su posición. El alcance de salto es 110 unidades desde el centro. La etiqueta en vuelo consulta el registro del enlace mediante `crossed_link` y resuelve el sector opuesto, por lo que indica un destino distinto según el extremo. El panel de objetivo muestra el destino incluso al seleccionar una puerta aún sin cruzar. Seleccionarla no cambia el descubrimiento del mapa.
 
 Desde 0.1.1, el sprite de puerta es un anillo pixel art frontal con transparencia interior y exterior. Los catálogos marcan a Procurer, Retriever, Covetor y Rorqual con `no_ordnance`. Se comprueba al instalar módulos y al contar armas activas. Los guardados conservan los módulos ya montados para que el jugador pueda retirarlos.
 
-Desde 0.1.2, Leviatán, Nyx, Chimera y Firmamento tienen el rasgo `no_direct_tools`. Carecen de anclajes de láser, ametralladora, minería y salvaging. El editor impide añadirlos y el juego bloquea el equipamiento y uso de los módulos correspondientes. La nave 24 se llama Phoenix y mantiene el ID 23. La [tabla](../lore/fleets/flota-0.1.2.md) y la [imagen](../lore/fleets/flota-0.1.2.png) recogen la flota completa.
+Desde 0.1.2, Leviatán, Nyx, Chimera y Firmamento tienen el rasgo `no_direct_tools`. Carecen de anclajes de láser, ametralladora, minería y salvaging. El editor impide añadirlos y el juego bloquea el equipamiento y uso de los módulos correspondientes. La nave 24 se llama Phoenix y mantiene el ID 23. La [tabla actual](../lore/fleets/flota-0.1.9.md) recoge la flota completa. La imagen histórica 0.1.2 está en lore/fleets/.
 
 Desde 0.1.3, el vuelo en el sector 4108 muestra `assets/backgrounds/nebula-4108.png` encima del campo de estrellas y debajo de la escena. La textura de 704 × 448 tiene una máscara irregular con alfa cero en el perímetro. Se dibuja sin repetición. Su ancla es (450, −320) y su desplazamiento toma el 18 % del movimiento de cámara. La posición en pantalla y el tamaño usan la raíz cuadrada del zoom para que la capa lejana cambie con suavidad.
 
@@ -310,3 +311,110 @@ Abre project.godot en la raíz. Godot guarda en savegames/godot/latest.json tant
 data/background-profiles.txt define ID, PNG, ancho, alto, ancla X, ancla Y y factor de paralaje. data/sector-backgrounds.txt asigna un perfil al número visible del sector. El perfil se dibuja en vuelo encima del campo estelar sin repetición y con bordes transparentes. Godot carga los dos catálogos en _ready y los incorpora al export mediante export_presets.cfg. Los sectores sin asignación usan sólo estrellas. Consulta [ambientes para futuros sectores](../lore/maps/ambientes.md) para ver los cuatro perfiles listos y las dos ideas pendientes.
 
 En shipConfigurator 1.5, Ctrl o Mayús en Puntos colocados permite seleccionar varios y borrarlos con Supr o Borrar selección. La casilla Simular módulo de plataforma equipado muestra la huella de las plataformas en el editor. El rumbo de despegue se guarda como comentario CSV antes de la fila de la rampa, en grados horarios desde proa. Las rampas anteriores usan 0 grados hasta que se editen.
+
+## Clases y compatibilidad de hangar desde 0.1.7
+
+| Clase | claseID | Drones | Cazas de serie |
+| --- | ---: | --- | --- |
+| Fragata | 1 | Sí | No |
+| Crucero | 2 | Sí | No |
+| Battleship | 3 | Sí | No |
+| Dreadnought | 4 | Sí | No |
+| Carrier | 5 | Sí | Sí |
+| Titán, futuro | 6 | Sí | Sí |
+
+Carrier ocupa el mismo tramo de tamaño capital que Dreadnought y queda por debajo de Titán. La numeración visible y los IDs de nave siguen siendo independientes de claseID. Los IDs 8,21,22 y 33 pasan a Carrier. Sus IDs persistentes conservan el equipo y la bodega de partidas anteriores.
+
+ship_allows_hangar controla los tipos hangar_cazas_* durante la lectura de fichas. El catálogo y los rasgos se cargan antes de los hardpoints. Los puntos incompatibles quedan en el archivo y el configurador los muestra como no compatibles, permitiendo conservarlos o borrarlos. El rasgo fighter_hangar, definido en attributes/ship-traits.txt con habilita_cazas=1, permite preparar una nave menor que admita cazas. Su asignación usa la columna traits del catálogo. La mecánica de lanzamiento, vuelo y recuperación está pendiente.
+
+## Flota de Helión desde 0.1.8
+
+SHIP_COUNT pasa a 46. Los IDs 35–45 añaden once sprites con prefijo helion- y facción helion en ambos catálogos. El nombre de facción aparece en el hangar y en el panel de objetivo. Las reglas de selección y persistencia se basan en el ID estable del casco. El direccionamiento por bloques de 16 desde el casco 27 admite los nuevos equipos y load_shields amplía los guardados anteriores con estados vacíos.
+
+La [ficha de Helión](../lore/fleets/helion-0.1.8.md) relaciona los archivos originales, nombres, clases, atributos e IDs para shipConfigurator. Los hardpoints se configuran más adelante desde el editor vigente. Los sectores y los spawns existentes siguen definidos por la red y los roles actuales. El permiso de cazas de serie se limita a claseID 5 y 6, y fighter_hangar permite excepciones individuales.
+
+## Cluster01 y mapa ampliado desde 0.1.9
+
+`data/sectors.txt` contiene 100 filas ordenadas por ID: `id,name,map_x,map_y,ice,station,cluster,faction`. `data/sector-links.txt` define 116 parejas `from,to`. Las coordenadas son del diagrama, no posiciones de vuelo. Se exportan como datos de Godot y se integran como recursos de C#. La correspondencia de los 91 códigos nuevos está en [Cluster01](../lore/maps/cluster01.md).
+
+Sólo 4110 conecta la red anterior con el clúster, mediante dos puertas nuevas. Conserva sus conexiones con 4107 y 4109. Los 17 sectores de hielo generan exactamente 512/640 asteroides con recursos 0/1, agua y metano; el resto contiene recursos 2–9. Las seis estaciones añadidas ocupan índices 9–14, tienen mercados propios y guardan su estado mediante extra_stations. Se conservan los índices anteriores, los guardados de nueve sectores y los diez primeros enlaces. Los nuevos sectores usan patrullas ordinarias sin asignación de facción; no heredan Stratios por tener un ID alto. Los mercantes pueden dirigirse a la estación del clúster más cercana por puertas, incluso en sectores sin estación.
+
+Con M se centra el mapa en el sector actual. La rueda cambia el zoom alrededor del cursor y arrastrar con botón derecho desplaza el plano. Las estaciones se señalan con cuadrado, hielo con contorno azul y Asterión con su escudo. Se mantiene el descubrimiento progresivo. `tp CODIGO` y la dirección alternativa `tp 4116` son válidos; un destino inexistente no hace nada. Los códigos no muestran seguridad cero ni una facción inventada.
+
+Carrier usa `long_ftl,multiplicador_alcance,3` en ship-traits.txt y el rasgo se asigna a los seis cascos de clase 5. El alcance se calcula a partir del módulo actual (3 × 3 = 9), conserva destino conocido, módulo de utilidad equipado, confirmación, cooldown y consecuencias de escudo. Titán y otras clases mantienen 3 salvo un rasgo explícito futuro.
+
+La búsqueda de rutas y el registro de sectores conocidos usan conjuntos/diccionarios, sin máscaras de sector. Godot añade crossed_links al JSON; C# añade una línea 26 con los índices cruzados, sin desplazar las 25 líneas anteriores. Las partidas antiguas inicializan los campos y mercados nuevos. Pruebas: `--smoke` en C# y `--headless --path . --script build/test-cluster.gd` en Godot con un APPDATA temporal; el test usa user://cluster-regression.json y no toca savegames/. El [PNG del mapa](../lore/maps/mapa-estelar-0.1.9.png) se regenera con build/render-star-map.ps1.
+
+## Materiales e industria desde 0.1.10
+
+El catálogo compartido está en data/materials.txt (CSV: id,key,name,category,stage,price). IDs 0–9 se mantienen. Tungsteno, cromo, cobalto, magnesio y molibdeno usan 10–14; seis especiales ficticios, 15–20. Tierras raras sigue ID 9 y pasa a especial. IDs 21–41 son los refinados; 42–70, gases y componentes de procesamiento/fabricación. Hay 71 materiales y 50 recetas en data/recipes.txt (id,key,name,stage,inputs,outputs). Cada lista usa id:cantidad separada por |. Las recetas secundarias sólo consumen productos procesados. Las cantidades son unidades abstractas y las pérdidas no crean residuos todavía.
+
+Godot/industry.gd carga el catálogo y la pantalla; game.gd consume sus nombres/precios y funciones. csharp/Industry.cs forma una clase parcial con Game.cs y build/build-csharp.ps1 compila ambas. Los dos txt se incluyen en los exportadores. No usar extensión csv aquí: el importador predeterminado de Godot la interpreta como traducciones.
+
+En estación, botón Industria o F abre recetas y materiales. U descarga la bodega. Selecciona receta y fabrica 1/10 lotes. Hay paginación y rueda. Se validan ingredientes y límites de salida antes de consumir, usando el inventario descargado y sin coste/tiempo por ahora. Chips, casco, motores, sensores, matrices y núcleos son componentes de inventario para ensamblaje futuro; no producen naves ni módulos equipables. Agua y gases tampoco activan aún sistemas de combustible o soporte vital.
+
+Cada inicio/carga redistribuye 3–7 trazas en asteroides vivos por sector, con 1–3 U de un especial. Si quedan menos asteroides, se limita a los disponibles. No se persisten las trazas ni su revelación, pero sí lo recogido y los fragmentos. TAB normal no muestra el especial; al minar sale un fragmento adicional y se vacía la traza. El respawn no repone trazas, ni cambiar de sector/usar FTL/guardar. NPC mineros pueden agotar la traza de su asteroide sin premiar al jugador. El módulo raro Detector de trazas ID 11, de utilidad, habilita la revelación de la traza con TAB incluso si el asteroide ya estaba escaneado. Su stock y distribución son cero; no está disponible en juego normal todavía.
+
+Las composiciones ordinarias excluyen todos los especiales y productos industriales. Los campos de hielo conservan exactamente 512/640 asteroides de agua/metano; las trazas son adicionales. Salvaging mantiene IDs 5,2,4,3 (cobre,hierro,titanio,aluminio), 3/5/7 U por resto. Los mercados de materiales y módulos se paginan en once filas para mantener accesibles todos los recursos y el módulo nuevo.
+
+Los inventarios, bodegas, stocks y cantidades se amplían conservando los prefijos antiguos de diez materiales. El módulo detector se añade al final con stock cero, también al cargar partidas antiguas. C# acepta ahora las 26 líneas de 0.1.9 y conserva los índices de las 25 previas. Su --smoke usa un archivo temporal al comprobar guardado/carga, sin tocar partidas reales.
+
+La [guía industrial](../lore/industry/materiales-y-crafting.md) incluye categorías, lore de los especiales, las 50 recetas, límites de realismo y pendientes. [Tabla PNG](../lore/industry/crafting-0.1.10.png), regenerable con build/render-crafting.ps1. Pruebas: build/test-industry.gd, build/test-cluster.gd y --smoke en C#. build/preview-industry.gd permite revisar la interfaz con una partida temporal user://.
+
+## Etapas y eficiencia desde 0.1.11
+
+El estado vigente del catálogo es 23 brutos / 36 procesados / 29 componentes, 88 IDs y 65 recetas. «Refinado» es el primer tratamiento; el resultado es un material «procesado», que puede transformarse otra vez o entrar en fabricación. Gases, aleaciones, vidrio, cerámica, barras, cables y refrigerante dejan de compartir la etiqueta de componente. El ID 60 se llama Piezas de construcción. Se preservan todos los IDs previos. 71/72 son tritio/xenón; 73/74, los purificados; 75–87 añaden los componentes del esquema acordado.
+
+La generación añade combustibles escasos en un 1 % de asteroides elegibles, equiprobables entre tritio y xenón; en campos de hielo sólo participa el 20 % no reservado a agua/metano. Por ello siguen siendo escasos en hielo y no se rompe el 512/640 de agua/metano. Son composición ordinaria visible por TAB, distinta de los especiales ocultos. La composición es determinista por sector, sin stock inicial. rarity, séptima columna de materials.txt, permite distinguir comun/escaso/oculto al inicializar mercados.
+
+Las recetas especifican producción de diseño, sin porcentajes de máquina. El refinado aplica 95 % de recuperación general y después la eficiencia de refinería; los otros procesos sólo aplican la eficiencia de fabricación. attributes/station-industry.txt define station,refining_percent,fabrication_percent por índice de estación; todas usan 80/80. Si falta una fila, se usa 80/80, y los valores se limitan a 0–100. Servicio a 0 % no consume ingredientes. La mejora por módulos será futura. Diez U de cobre: 10×0,95×0,80=7,6 U; al 100 %, 9,5 U.
+
+La producción usa enteros con escala 10000 para evitar pérdida de decimales. El saldo fraccionario del jugador es por material y global, como el inventario actual. Las unidades completas van al inventario; el resto queda en industry.remainders/industryRemainders. Se muestra el total en Materiales y se indica que sólo unidades completas se consumen o venden. Para componentes, 0,8 representa progreso parcial de un lote. Agrupar o dividir lotes no cambia el rendimiento. Los ingredientes y el límite de inventario se validan antes de alterar inventario/saldos.
+
+Godot añade industry_remainders al JSON. C# añade una línea 27 de saldos, conserva las 26 anteriores y acepta los formatos previos. ReadAmounts admite el prefijo histórico de 71 materiales, además del de diez. Los productos/saldos nuevos empiezan a cero. El módulo detector y el salvaging conservan su comportamiento. Ambos exportadores incluyen station-industry.txt.
+
+Los componentes fabricados no alteran hardpoints, ranuras ni capacidad de cazas. Las futuras recetas de fragatas no pedirán Bahía de hangar. Ensamblaje final de naves/estaciones/módulos y artefactos siguen pendientes. Servicio sin tarifas, tiempos ni consumo de energía en esta fase. [Tabla PNG vigente](../lore/industry/crafting-0.1.11.png); guía completa y tablas en lore/industry/materiales-y-crafting.md. La imagen muestra producción teórica tras recuperación y producción efectiva al 80 %.
+
+## Corrección de eficiencia desde 0.1.12
+
+Sólo Refinado aplica recuperación95 % y eficiencia de refinería (80 % inicial). Procesado/fabricación y cualquier futura etapa Ensamblaje devuelven100 % de su producción de diseño, sin consultar la eficiencia de fabricación de estación. La columna histórica fabrication_percent se conserva a100 en atributos; el código también ignora valores antiguos80/0 para estas etapas. La refinería a0 no bloquea fabricar. No se eliminan ni redondean saldos anteriores de materiales o componentes. Las fracciones nuevas se generan sólo al refinar. Las tablas de ensamblaje final siguen pendientes, sujetas a la regla100 %. Imagen vigente: lore/industry/crafting-0.1.12.png. Pruebas actualizadas con componentes enteros y electrólisis sin pérdidas después del refinado.
+
+## Salvaging futuro vinculado a cada nave
+
+Decisión confirmada, pendiente de implementación: recuperar componentes o materiales refinados según los componentes de la nave destruida y los requeridos para su construcción. Se definirá al asignar componentes a cada nave. No hay cantidades/probabilidades acordadas. El salvaging actual de 0.1.12 permanece operativo hasta esa tarea; no cambia el botín directo de módulos.
+
+## Ambientes completos desde 0.1.13
+
+Hay ocho familias de ambiente y 100 asignaciones: Arco de gas16, Velo de polvo11, Límite planetario5, Remanente de supernova10, Aurora solar18, Vacío profundo19, Nube criogénica17 y Tormenta iónica4. Esos totales incluyen Nácar y Vesper como variantes históricas; técnicamente hay diez perfiles. Los cuatro PNG nuevos generados con imagegen están en assets/backgrounds, con revisiones v2 para solar/cryo y borradores ignorados en drafts. No cambia la simulación ni el progreso guardado.
+
+background-profiles.txt acepta siete u ocho columnas. La octava es opacity (0–1); el valor por defecto de perfiles anteriores es1. Godot aplica modulación alfa y C# una ColorMatrix a la imagen. Las dimensiones/anclas, paralaje y sqrt(zoom) permanecen. Se superpone una única imagen transparente al campo estelar, sin tiling de nubes. sector-backgrounds.txt usa direcciones4107+ID, incluso para sectores con código alfanumérico. Los cien sectores tienen una fila estable; las partidas antiguas toman las nuevas asignaciones al cargar.
+
+background-types.txt es metadato editorial de nombres/familias/colores para el mapa y el catálogo, no añade reglas de juego. render-ambiences.ps1 dibuja la lámina con estrellas/opacidad; render-star-map.ps1 añade la leyenda y banda de color por sector. Ver lore/maps/ambientes.md, mapa-estelar.md, bocetos-ambientes-0.1.13.png y mapa-estelar-0.1.13.png. Prompts completos en lore/maps/prompts-ambientes-0.1.13.md.
+
+Pruebas: test-backgrounds.gd comprueba todas las asignaciones, los ocho tipos, los campos de hielo, Nácar/Vesper y alfa de bordes. preview-backgrounds.gd renderiza escenas reales para los ocho tipos; C# --smoke también renderiza ocho perfiles. Para no tocar partidas, los scripts Godot usan save_path temporal y APPDATA/LOCALAPPDATA aislados. Al exportar, conservar los recursos de fondos en resources.rsp de C# y los txt incluidos por Godot.
+
+## Compatibilidad de atraques desde 0.1.16
+
+docking_ports/DockingPorts ofrece únicamente puertos con cobertura centrada≥90 % y sin colisión en casco/pasillo exterior. Las clases menores que Dread prefieren normales y recurren a capitales compatibles si es necesario. Las capitales mantienen su categoría. uses_capital_port/UsesCapitalPort considera también la envolvente real para puertos estándar. Ocaso (Battleship,ID41) necesita puerto capital en las estaciones actuales porque mide67deancho, frente a58normal:86,57 % máximo. Un normal personalizado más ancho puede admitirla. No se cambian clase/atributos ni dimensiones del puerto.
+
+La selección, visualización, pulsaciónB y autoatraque comparten la lista. Se conserva velocidad3,alineación10°,cobertura90 % y el funcionamiento al mantener/soltarB. dock_at/DockAt remapea puertos guardados incompatibles y protege listas vacías. Compatibilidad en caché por nave/estación, transitoria; invalidarla si se implementa recarga/edición de geometría durante el vuelo.
+
+ship_overlaps_station/ShipOverlapsStation se comparte entre colisión y comprobación de puerto. Los cinco puntos longitudinales del pasillo se comprueban con la envolvente alineada y la colisión de estación. En Godot, get_image().duplicate() antes de redimensionar/rotar evita modificar la imagen compartida. Cénit conserva máscara860×860 en lugar de la copia256×256 usada para el hangar, eliminando colisiones falsas. Se aplica también a cielo, rotación de casco y escudo.
+
+La batería de C# compila Game.cs,Industry.cs y DockingChecks.cs. test-docking.gd y --smoke cubren46×15combinaciones,5.300atraques manuales en ambos sentidos y690automáticos, además de puertos personalizados, remapeo y lista vacía. Ver lore/fleets/atraques-0.1.16.md para la tabla de flota y causas. audit-docking.gd genera un informe de incompatibilidades actuales. Se usan partidas temporales para pruebas.
+
+## Estadísticas del sector · 0.1.16
+
+En la consola (º), `sector_stats 1` activa un panel en la parte superior derecha, a la izquierda del minimapa. `sector_stats 0` lo oculta. Tab completa el comando y alterna 0/1. El panel muestra el nombre del sector actual, el número y los nombres de todas sus conexiones (incluidas las no exploradas), los NPC vivos presentes y el identificador exacto del perfil de fondo asignado. Se actualiza al cambiar de sector o cambiar el tráfico. Incluye los mercantes presentes en la lista de NPC; excluye jugador, estaciones y restos. Es una opción de depuración desactivada al arrancar y no se guarda en la partida.
+
+## Criogenia · 0.1.16
+
+Consulta lore/maps/criogenia.md: 17 sistemas de hielo, ralentización de velocidad 10–80 %, exposición por nave/visita y utilidad Boreal ID 12. Guardado Godot añade cryo_seconds al JSON; C# añade línea 28 opcional y noveno campo a la ruta mercante, aceptando formatos anteriores. Catálogos de módulos crecen de 12 a 13 sin desplazar IDs. Icono boreal.svg en Godot y equivalente C# nativo. C# compila también csharp/Cryogenic.cs. Las máscaras de escarcha se generan una vez por sprite y se modulan al dibujar, sin alterar colisiones. build/test-cryogenic.gd, build/preview-cryogenic.gd y C# --smoke cubren la funcionalidad. documentation/pendientes.md registra las seis fichas añadidas a In progress.
+
+## Exploración y prospección · 0.1.17
+
+Nueva implementación compartida en Godot/survey.gd y csharp/Survey.cs, compilado con los otros cuatro archivos de C#. Datos: background-layers.txt y asteroid-materials.txt. Estación Umbral índice 15/sector 29; 16 estaciones. Módulo de utilidad espectrómetro ID 13, 2.600 créditos; se activa al completar TAB y muestra snapshot de reservas sin ubicaciones. El informe pausa el juego y queda por encima del HUD debug. Gigantes en los índices 620,624,628,632 según sector%3: 2–4 por sector; radio 150–240 y piezas de mineral por tamaño. El resto de materiales y el ciclo de especiales no se alteran.
+
+Persistencia: geology_version=1 en JSON Godot y línea 29 opcional en C#. Al leer guardados anteriores, se conserva el estado minado/salud, pero no se reutiliza una posición de asteroide pequeño para un índice promovido a gigante. En versiones nuevas se conserva su posición. Espectrómetro aumenta catálogos de módulos de 13 a 14; lectores admiten prefijos anteriores. Nuevos datos y sprites se incluyen en ambos ejecutables. Ver build/test-survey.gd, build/preview-survey.gd y C# RunSurveySmoke; regenerar mapa con build/render-star-map.ps1 -Version 0.1.17. Reglas, láminas y notas en lore/maps/exploracion-0.1.17.md.
+
+El perfil de exportación incluye explícitamente data/background-layers.txt y data/asteroid-materials.txt. _ready verifica sus diez perfiles de capas y los 23 sprites para detectar catálogos ausentes en una distribución.

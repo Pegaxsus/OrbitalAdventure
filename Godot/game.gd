@@ -2,7 +2,8 @@ extends Node2D
 
 const MISSILE := preload("res://Godot/missile.tscn")
 const HALF := 5000.0
-const SECTOR_COUNT := 9
+const SECTOR_COUNT := 100
+var sector_specs: Array[Dictionary] = load_sector_specs()
 const ASTERION_HOME := 5
 const PIRATE_FRONTIER := 8
 const HOME_STATION := 6
@@ -25,12 +26,14 @@ func load_sector_backgrounds() -> void:
 	var profiles := {}
 	for line in FileAccess.get_file_as_string("res://data/background-profiles.txt").split("\n", false):
 		var row := line.strip_edges().split(",")
-		if row[0].begins_with("#") or row.size() != 7: continue
+		if row[0].begins_with("#") or row.size() not in [7,8]: continue
 		profiles[row[0]] = {
+			"id":row[0],
 			"texture": load(BACKGROUND_ASSETS + row[1]) as Texture2D,
 			"size": Vector2(row[2].to_float(), row[3].to_float()),
 			"anchor": Vector2(row[4].to_float(), row[5].to_float()),
 			"parallax": row[6].to_float(),
+			"opacity":clampf(row[7].to_float(),0,1) if row.size()>7 else 1.0,
 		}
 	for line in FileAccess.get_file_as_string("res://data/sector-backgrounds.txt").split("\n", false):
 		var row := line.strip_edges().split(",")
@@ -38,15 +41,59 @@ func load_sector_backgrounds() -> void:
 		if row[0].is_valid_int() and profiles.has(row[1]):
 			sector_backgrounds[row[0].to_int()] = profiles[row[1]]
 
+# Exposure belongs to the current visit, never to the sector globally.
+var cryo_seconds := 0.0
+var cryo_sector := -1
+var frost_art: Dictionary = {}
+
+func cryogenic_sector(index: int) -> bool:
+	return str(sector_backgrounds.get(4107+index,{}).get("id","")) == "cryo-cloud"
+
+func cryo_slowdown(seconds: float, protected: bool = false, index: int = -1) -> float:
+	if protected or not cryogenic_sector(sector if index < 0 else index): return 0.0
+	return minf(.8,.1+.1*floorf(maxf(0,seconds)/60.0))
+
+func player_cruise_speed() -> float:
+	return maxf(95,345-stat(3)*1.62)*(1.0+.1*module_count(6))*(1.0-player_cryo_slowdown())
+
+func player_cryo_slowdown() -> float:
+	return cryo_slowdown(cryo_seconds if cryo_sector == sector else 0.0,module_count(12)>0)
+
+func update_player_cryo(dt: float) -> void:
+	if cryo_sector != sector:
+		cryo_seconds = 0.0
+		cryo_sector = sector
+	if not cryogenic_sector(sector): cryo_seconds = 0.0
+	elif not hangar: cryo_seconds = minf(420,cryo_seconds+dt)
+
+func npc_cryo_slowdown(npc: Dictionary) -> float:
+	return cryo_slowdown(float(npc.get("cryo_seconds",0)),bool(npc.get("cryo_protected",false)))
+
+func draw_frost(ship: int, height: float, slowdown: float) -> void:
+	if slowdown <= 0: return
+	if not frost_art.has(ship):
+		var source: Image = ships[ship].get_image().duplicate()
+		source.resize(maxi(1,int(256.0*source.get_width()/source.get_height())),256,Image.INTERPOLATE_NEAREST)
+		var ice := Image.create(source.get_width(),source.get_height(),false,Image.FORMAT_RGBA8)
+		for y in range(source.get_height()):
+			for x in range(source.get_width()):
+				var alpha: float = source.get_pixel(x,y).a
+				if alpha <= 0: continue
+				var patch := posmod((x/5)*17+(y/7)*31+(x/5)*(y/7)*3,23)
+				var crystal := x%17 == y%17 or (x+y)%29 == 0
+				ice.set_pixel(x,y,Color(.78,.94,1,alpha*(.82 if crystal else (.24+patch/60.0))))
+		frost_art[ship] = ImageTexture.create_from_image(ice)
+	var size := Vector2(height*ships[ship].get_width()/ships[ship].get_height(),height)
+	draw_texture_rect(frost_art[ship],Rect2(-size/2,size),false,Color(1,1,1,slowdown/.8))
+
 func draw_sector_background(center: Vector2) -> void:
-	var background: Dictionary = sector_backgrounds.get(4107 + sector, {})
-	if background.is_empty() or background.texture == null: return
-	var scale := sqrt(zoom)
-	var size: Vector2 = background.size * scale
-	var position: Vector2 = center + (background.anchor - pos) * background.parallax * scale
-	draw_texture_rect(background.texture, Rect2(position - size / 2, size), false)
+	survey.draw_background(self,center)
 const MODES := ["Ametralladora", "Cohete", "Minería", "Sin armamento", "Salvaging", "Misil"]
-const RES := ["Hielo de agua", "Metano", "Hierro", "Aluminio", "Titanio", "Cobre", "Silicio", "Carbono", "Níquel", "Tierras raras"]
+var industry := preload("res://Godot/industry.gd").new()
+var survey := preload("res://Godot/survey.gd").new()
+var RES: Array[String] = industry.names
+const CONSTRUCTION_ORES := [2,3,4,5,6,7,8,10,11,12,13,14]
+const SPECIAL_ORES := [9,15,16,17,18,19,20]
 const PAINT := [Color.WHITE, Color(1.5,.65,.55), Color(.65,1.4,.65), Color(1.25,.72,1.4)]
 const LEGACY_SAVE := "user://sector.json"
 
@@ -215,7 +262,7 @@ var next_pdc_id := 0
 
 func make_npc(role: String, ship: int, at: Vector2) -> Dictionary:
 	var npc := {"role":role,"ship":ship,"p":at,"v":Vector2.ZERO,"angle":0.0,
-		"module":2 if role == "Minero" else (-1 if role in ["Trader","Mercante"] else 0),"hp":int(specs[ship][2]),"cooldown":0.0,"trace":0.0,"end":at,"cargo":0,"work":0.0,"rock":-1}
+		"module":2 if role == "Minero" else (-1 if role in ["Trader","Mercante"] else 0),"hp":int(specs[ship][2]),"cryo_seconds":0.0,"cryo_protected":false,"cooldown":0.0,"trace":0.0,"end":at,"cargo":0,"work":0.0,"rock":-1}
 	npc.pdc_id = next_pdc_id
 	next_pdc_id += 1
 	npc.ftl = role in ["Trader","Mercante"]
@@ -273,7 +320,7 @@ func reset_traffic() -> void:
 	neutral_attack = -100
 	make_npc("Minero",2,Vector2(230,-140))
 	if sector == ASTERION_HOME: update_home_guards(0)
-	else: make_npc("Patrulla",STRATIOS if sector >= ASTERION_HOME else 4,Vector2(-290,220))
+	else: make_npc("Patrulla",STRATIOS if sector_specs[sector].faction == "asterion" else 4,Vector2(-290,220))
 	if sector == PIRATE_FRONTIER:
 		spawn_raid()
 		next_raid = randf_range(10,18)
@@ -374,6 +421,7 @@ func fire_npc(npc: Dictionary, at: Vector2, victim: Dictionary) -> void:
 		npc_hit(victim,12,false,npc)
 
 func steer_npc(npc: Dictionary, goal: Vector2, speed: float, dt: float, mining_rock: int) -> void:
+	speed *= 1.0-npc_cryo_slowdown(npc)
 	var offset: Vector2 = goal-npc.p
 	var desired := offset.limit_length(speed)
 	var ahead: Vector2 = npc.p + desired.normalized()*100
@@ -383,7 +431,7 @@ func steer_npc(npc: Dictionary, goal: Vector2, speed: float, dt: float, mining_r
 		var side: Vector2 = (npc.p-rock.p).normalized()
 		desired = (desired.normalized().orthogonal()+side*.7).normalized()*speed
 	var old_velocity: Vector2 = npc.v
-	npc.v = npc.v.move_toward(desired,80*dt*(1.25 if reinforced_guard(npc) else 1.0))
+	npc.v = npc.v.move_toward(desired,80*dt*(1.25 if reinforced_guard(npc) else 1.0)).limit_length(speed)
 	npc.active_thrust = (npc.v-old_velocity).length()/maxf(dt,.00001)
 	npc.p += npc.v*dt
 	var facing: Vector2 = npc.end-npc.p if npc.trace > 0 else offset
@@ -403,7 +451,7 @@ func update_traffic(dt: float) -> void:
 			next_trader = traffic_time + randf_range(20,42)
 		else:
 			var ship: int = [2,5,9].pick_random()
-			trader_stock.fill(5)
+			trader_stock = industry.stock(5)
 			trader = make_npc("Trader",ship,(pos+Vector2(-420,180)).clamp(Vector2(-4500,-4500),Vector2(4500,4500)))
 			ftl_npc_arrival(trader)
 			if ship == 9:
@@ -413,6 +461,7 @@ func update_traffic(dt: float) -> void:
 	var miner: Dictionary = npcs[0]
 	for npc in npcs:
 		if hangar or player_destroying or npc.hp <= 0: continue
+		if npc.role != "Mercante": npc.cryo_seconds = minf(420,float(npc.get("cryo_seconds",0))+dt) if cryogenic_sector(sector) else 0.0
 		npc.cooldown -= dt
 		npc.trace -= dt
 		var goal: Vector2 = npc.p
@@ -448,7 +497,7 @@ func update_traffic(dt: float) -> void:
 						npc.rock = -1
 						npc.think = 8.0
 				elif npc.cargo >= 20:
-					goal = Vector2(0,-1250)
+					goal = gate_position(route_edge(sector,0),sector)
 					if npc.p.distance_to(goal) < 65: npc.hp = 0
 				elif npc.has("ore"):
 					goal = npc.ore
@@ -486,6 +535,7 @@ func update_traffic(dt: float) -> void:
 								npc.ore = rock.p
 								npc.ore_resource = rock.first
 								npc.ore_amount = mini(20-npc.cargo,4+asteroid_size(rock.r)*4)
+								rock.special_amount = 0
 								rock.mined = true
 								rock.hp = 0
 								npc.work = 0
@@ -543,17 +593,17 @@ var freight_clock := 0.0
 
 func route_edge(from_sector: int, destination: int) -> int:
 	var queue: Array[Vector2i] = [Vector2i(from_sector,-1)]
-	var seen := 1 << from_sector
+	var seen := {from_sector:true}
 	while not queue.is_empty():
 		var entry: Vector2i = queue.pop_front()
 		for i in range(links.size()):
 			var link: Vector2i = links[i]
 			if entry.x != link.x and entry.x != link.y: continue
 			var next := link.y if entry.x == link.x else link.x
-			if (seen & (1 << next)) != 0: continue
+			if seen.has(next): continue
 			var first := i if entry.y < 0 else entry.y
 			if next == destination: return first
-			seen |= 1 << next
+			seen[next] = true
 			queue.append(Vector2i(next,first))
 	return -1
 
@@ -564,6 +614,10 @@ func update_freight(dt: float) -> void:
 		freight_clock = 0
 		var origin := 0 if sector >= ASTERION_HOME else randi_range(0,1)
 		var destination := mini(8,HOME_STATION+sector-ASTERION_HOME) if sector >= ASTERION_HOME else 1-origin
+		if sector >= 9:
+			destination = 9
+			for candidate in range(10,stations.size()):
+				if jump_distance(int(stations[candidate].sector)) < jump_distance(int(stations[destination].sector)): destination = candidate
 		var kind := -1
 		var best := 0
 		var stock := station_minerals(origin)
@@ -577,8 +631,10 @@ func update_freight(dt: float) -> void:
 		stock[kind] -= amount
 		var local_origin := sector if sector >= ASTERION_HOME else int(stations[origin].sector)
 		var start := gate_position(route_edge(local_origin,int(stations[origin].sector)),local_origin) if sector >= ASTERION_HOME else port_center(stations[origin],0)
-		freight = {"sector":local_origin,"destination":destination,"kind":kind,"amount":amount,"x":start.x,"y":start.y,"hp":int(specs[5][2]),"ftl_wait":300.0}
+		freight = {"sector":local_origin,"destination":destination,"kind":kind,"amount":amount,"x":start.x,"y":start.y,"hp":int(specs[5][2]),"ftl_wait":300.0,"cryo_seconds":0.0}
 	var local := int(freight.sector)
+	freight.cryo_seconds = minf(420,float(freight.get("cryo_seconds",0))+dt) if cryogenic_sector(local) else 0.0
+	var freight_speed := 95*(1.0-cryo_slowdown(float(freight.cryo_seconds),bool(freight_ship.get("cryo_protected",false)),local))
 	var destination := int(freight.destination)
 	var target_sector := int(stations[destination].sector)
 	var edge := route_edge(local,target_sector) if local != target_sector else -1
@@ -589,11 +645,12 @@ func update_freight(dt: float) -> void:
 		freight_ship.hp = int(freight.hp)
 		ftl_npc_arrival(freight_ship)
 	if not freight_ship.is_empty():
+		freight_ship.cryo_seconds = freight.cryo_seconds
 		freight.hp = freight_ship.hp
 		var direction := goal-at
 		if direction.length_squared() > 1: freight_ship.angle = direction.angle()+PI/2
 	var previous_position := at
-	at = at.move_toward(goal,95*dt)
+	at = at.move_toward(goal,freight_speed*dt)
 	freight.x = at.x
 	freight.y = at.y
 	if not freight_ship.is_empty():
@@ -615,6 +672,7 @@ func update_freight(dt: float) -> void:
 		local = link.y if link.x == local else link.x
 		var entry := gate_position(edge,local)
 		freight.sector = local
+		freight.cryo_seconds = 0.0
 		freight.ftl_wait = 300.0
 		freight.x = entry.x
 		freight.y = entry.y
@@ -669,30 +727,57 @@ const CAPITAL_PORT := 8
 const CAPITAL_LENGTH := 258.0
 const CAPITAL_WIDTH := 196.0
 
+func ship_fits_dock(dimensions: Vector2) -> bool:
+	if dimensions.x <= 0 or dimensions.y <= 0: return false
+	var coverage := minf(1,dimensions.x/stat(3))*minf(1,dimensions.y/(2*ship_half_width()))
+	return coverage >= .89999
+
 func uses_capital_port() -> bool:
-	return int(specs[selected][11]) >= 4
+	return int(specs[selected][11]) >= 4 or not ship_fits_dock(Vector2(PORT_LENGTH,PORT_WIDTH))
 
 func port_dimensions(port: int, station: Dictionary = {}) -> Vector2:
 	if station.get("dock_mounts",{}).has(port): return station.dock_mounts[port].size
 	return Vector2(CAPITAL_LENGTH,CAPITAL_WIDTH) if port >= CAPITAL_PORT else Vector2(PORT_LENGTH,PORT_WIDTH)
 
 func docking_ports(station: Dictionary) -> Array:
-	if station.layout == "shipyard": return [CAPITAL_PORT]
-	return range(CAPITAL_PORT,CAPITAL_PORT+station.capital_ports) if uses_capital_port() else range(int(station.ports))
+	if not station.has("dock_compatibility"): station.dock_compatibility = {}
+	var cache: Dictionary = station.dock_compatibility
+	if cache.has(selected): return cache[selected]
+	var normal: Array = []
+	if int(specs[selected][11]) < 4 and station.layout != "shipyard":
+		for port in range(int(station.ports)):
+			if ship_fits_dock(port_dimensions(port,station)) and port_has_clearance(station,port): normal.append(port)
+	if not normal.is_empty():
+		cache[selected] = normal
+		return normal
+	var capital: Array = []
+	for port in range(CAPITAL_PORT,CAPITAL_PORT+int(station.capital_ports)):
+		if ship_fits_dock(port_dimensions(port,station)) and port_has_clearance(station,port): capital.append(port)
+	cache[selected] = capital
+	return capital
+
+func port_has_clearance(station: Dictionary, port: int) -> bool:
+	var axis := port_axis(port,station)
+	var center := port_center(station,port)
+	var outward := axis if axis.dot(center-station.p) >= 0 else -axis
+	var distance := port_dimensions(port,station).x*.5
+	for fraction in [0.0,.125,.25,.5,1.0]:
+		if ship_overlaps_station(station,center+outward*distance*float(fraction),axis): return false
+	return true
 
 func load_stations() -> void:
-	var sky := STAR_FIELD.get_image()
+	var sky := STAR_FIELD.get_image().duplicate()
 	sky.resize(150,100,Image.INTERPOLATE_LANCZOS)
 	sky.resize(900,600,Image.INTERPOLATE_BILINEAR)
 	soft_sky = ImageTexture.create_from_image(sky)
 	for line in FileAccess.get_file_as_string("res://attributes/station-attributes.txt").strip_edges().split("\n"):
 		var data := line.strip_edges().split(",")
 		var art: Texture2D = load("res://assets/stations/"+data[0])
-		var soft := art.get_image()
+		var soft := art.get_image().duplicate()
 		soft.resize(36,36,Image.INTERPOLATE_LANCZOS)
 		soft.resize(256,256,Image.INTERPOLATE_BILINEAR)
 		var station := {"name":data[1],"sector":int(data[2]),"p":Vector2(float(data[3]),float(data[4])),
-			"size":float(data[5]),"mass":int(data[6]),"hp":int(data[7]),"max_hp":int(data[7]),"repair_delay":0.0,"repair_fraction":0.0,"ports":int(data[8]),"art":art,"soft":ImageTexture.create_from_image(soft),"layout":data[9] if data.size()>9 else "cross","pivot":Vector2(float(data[10]),float(data[11])) if data.size()>11 else Vector2(.5,.5),"mask":art.get_image(),"capital_ports":3 if data.size()>9 and data[9]=="tri" else (2 if data.size()>9 and data[9]=="bi" else 1),"discovered":false,"reserve":0,"stock":[20,20,20,20,20,20,20,20,20,20],"modules":new_station_modules(),"shipyard":(data.size()>9 and data[9]=="shipyard") or (data.size()>12 and data[12]=="shipyard"),"dock_mounts":{},"defense_mounts":{}}
+			"size":float(data[5]),"mass":int(data[6]),"hp":int(data[7]),"max_hp":int(data[7]),"repair_delay":0.0,"repair_fraction":0.0,"ports":int(data[8]),"art":art,"soft":ImageTexture.create_from_image(soft),"layout":data[9] if data.size()>9 else "cross","pivot":Vector2(float(data[10]),float(data[11])) if data.size()>11 else Vector2(.5,.5),"mask":art.get_image(),"capital_ports":3 if data.size()>9 and data[9]=="tri" else (2 if data.size()>9 and data[9]=="bi" else 1),"discovered":false,"reserve":0,"stock":industry.stock(20),"modules":new_station_modules(),"shipyard":(data.size()>9 and data[9]=="shipyard") or (data.size()>12 and data[12]=="shipyard"),"dock_mounts":{},"defense_mounts":{}}
 		if station.layout == "custom":
 			load_station_mounts(station,"res://data/stations/"+data[0].get_basename()+".hardpoints.txt")
 		stations.append(station)
@@ -701,6 +786,7 @@ func new_station_modules() -> Array:
 	var stock := []
 	stock.resize(MODULE_NAMES.size())
 	stock.fill(2)
+	stock[11] = 0
 	return stock
 
 func load_station_mounts(station: Dictionary, path: String) -> void:
@@ -772,8 +858,11 @@ func port_center(station: Dictionary, port: int) -> Vector2:
 	return station.p + axis * (station.size / 2 + 82.5) + axis.orthogonal() * (48 if port%2 == 0 else -48)
 
 func dock_at(index: int, port: int) -> void:
-	dock_station = index
 	var available := docking_ports(stations[index])
+	if available.is_empty():
+		status = "Esta estación no tiene un puerto compatible con esta nave"
+		return
+	dock_station = index
 	dock_port = port if available.has(port) else int(available[0])
 	port = dock_port
 	pos = port_center(stations[index],port)
@@ -850,36 +939,30 @@ func station_shapes(station: Dictionary) -> Array[Rect2]:
 		Rect2(p-Vector2(size*.071,size*.46),Vector2(size*.142,size*.92)),
 		Rect2(p-Vector2.ONE*size*.13,Vector2.ONE*size*.26)]
 
-func station_contact(previous: Vector2) -> bool:
+func ship_overlaps_station(station: Dictionary, at: Vector2, nose: Vector2) -> bool:
+	if at.distance_to(station.p) > station.size*1.3+stat(3): return false
 	var width := ship_half_width()
-	for station in stations:
-		if station.sector != sector or pos.distance_to(station.p) > station.size*1.3+stat(3): continue
-		if station.layout != "cross":
-			var collision := false
-			for longitudinal in [-.45,0,.45]:
-				var point: Vector2 = pos+forward()*stat(3)*longitudinal
-				for i in range(9):
-					var sample := point if i == 8 else point+Vector2.from_angle(i*TAU/8)*width
-					if absf((sample-pos).dot(forward())) <= stat(3)*.5 and station_contains(station,sample):
-						collision = true
-			if collision:
-				var speed := vel.length()
-				pos = previous
-				vel *= -.32
-				if speed > 14: player_damage(int(speed*.3))
-				if hp <= 0: destroyed()
-				return true
-			continue
+	if station.layout != "cross":
+		for longitudinal in [-.45,0,.45]:
+			var point: Vector2 = at+nose*stat(3)*longitudinal
+			for i in range(9):
+				var sample := point if i == 8 else point+Vector2.from_angle(i*TAU/8)*width
+				if absf((sample-at).dot(nose)) <= stat(3)*.5 and station_contains(station,sample): return true
+	else:
 		for shape in station_shapes(station):
 			for i in [-1,0,1]:
-				var sample: Vector2 = pos+forward()*int(i)*stat(3)*.37
-				if not shape.grow(width).has_point(sample): continue
-				var speed := vel.length()
-				pos = previous
-				vel *= -.32
-				if speed > 14: player_damage(int(speed*.3))
-				if hp <= 0: destroyed()
-				return true
+				if shape.grow(width).has_point(at+nose*int(i)*stat(3)*.37): return true
+	return false
+
+func station_contact(previous: Vector2) -> bool:
+	for station in stations:
+		if station.sector != sector or not ship_overlaps_station(station,pos,forward()): continue
+		var speed := vel.length()
+		pos = previous
+		vel *= -.32
+		if speed > 14: player_damage(int(speed*.3))
+		if hp <= 0: destroyed()
+		return true
 	return false
 
 func draw_stations() -> void:
@@ -900,7 +983,7 @@ func draw_stations() -> void:
 			draw_colored_polygon(points,Color(.03,.26,.14,.52))
 			points.append(points[0])
 			draw_polyline(points,Color.PALE_GREEN,1.5)
-			if port >= CAPITAL_PORT: label(p+Vector2(-67,-145),"Atraque universal" if station.layout == "shipyard" else "Atraque Dreadnought",14,Color.PALE_GREEN)
+			if port >= CAPITAL_PORT: label(p+Vector2(-67,-145),"Atraque universal" if station.layout == "shipyard" else "Atraque capital",14,Color.PALE_GREEN)
 		label(station.p+Vector2(-74,40),"Mantén B · Autoatraque · Casco %d" % station.hp,13,Color.PALE_GREEN)
 
 func station_contains(station: Dictionary, point: Vector2) -> bool:
@@ -949,7 +1032,7 @@ func update_auto_dock(dt: float, held: bool) -> bool:
 		return false
 	angle = rotate_toward(angle,auto_angle,deg_to_rad(maxf(23,159-stat(3)))*(1+.1*module_count(7))*dt)
 	var offset: Vector2 = port_center(station,auto_port)-pos
-	var desired := offset.limit_length(35)
+	var desired := offset.limit_length(35*(1.0-player_cryo_slowdown()))
 	if offset.length() < 3: desired = Vector2.ZERO
 	var previous_velocity := vel
 	vel = vel.move_toward(desired,maxf(40,float(stat(1))/stat(0))*(1+.1*module_count(6))*dt)
@@ -967,6 +1050,7 @@ func update_auto_dock(dt: float, held: bool) -> bool:
 	return true
 
 func clear_station_approaches() -> void:
+	survey.clear_gate_approaches(self)
 	for station in stations:
 		if station.layout == "cross": continue
 		for rock in fields[station.sector]:
@@ -984,10 +1068,16 @@ func draw_docked_background(screen: Vector2) -> void:
 
 
 
-const SHIP_COUNT := 35
+const SHIP_COUNT := 46
+const FACTION_NAMES := {"asterion":"Asterión","helion":"Helión"}
 var trait_values: Dictionary = {}
 
 var hardpoints: Dictionary = {}
+
+func ship_allows_hangar(ship: int, kind: String) -> bool:
+	if not kind.begins_with("hangar_cazas_"): return true
+	if int(specs[ship][11]) in [5,6]: return true
+	return "fighter_hangar" in specs[ship][12].split("|") and float(trait_values.get("fighter_hangar/habilita_cazas",0)) > 0
 
 func load_hardpoints() -> bool:
 	if not read_hardpoint_file("res://data/hardpoints.txt",-1): return false
@@ -1012,6 +1102,7 @@ func read_hardpoint_file(path: String, expected_ship: int) -> bool:
 		if expected_ship >= 0 and (row[0] != "nave" or row[1] != str(expected_ship)):
 			push_error("ID de nave distinto al del archivo "+path)
 			return false
+		if row[0] == "nave" and row[2].begins_with("hangar_") and not ship_allows_hangar(int(row[1]),row[2]): continue
 		hardpoints["%s/%s/%s/%s" % [row[0],row[1],row[2],row[3]]] = Vector2(float(row[4]),float(row[5]))
 	return true
 
@@ -1094,7 +1185,7 @@ func load_ship_catalog() -> bool:
 			push_error("PNG de nave inválido: "+row[1])
 			return false
 		if row[2] == "180":
-			var art := texture.get_image()
+			var art := texture.get_image().duplicate()
 			art.flip_x()
 			art.flip_y()
 			texture = ImageTexture.create_from_image(art)
@@ -1106,18 +1197,29 @@ func load_ship_catalog() -> bool:
 	return true
 
 func _ready() -> void:
+	var old_prices := [3,2,22,6,46,25,8,23,8,54]
+	for i in range(10): NACAR_PRICES[i] = old_prices[i]
+	if sector_specs.size() != SECTOR_COUNT or links.is_empty():
+		push_error("Faltan datos del mapa estelar")
+		get_tree().quit(1)
+		return
 	target_title_font.font_names = PackedStringArray(["Segoe UI"])
 	target_title_font.font_weight = 700
 	target_body_font.font_names = PackedStringArray(["Consolas"])
 	add_child(missile_layer)
 	load_sector_backgrounds()
+	survey.initialize(self)
+	if survey.material_art.size() != 23 or survey.layers.size() != 10:
+		push_error("Faltan catálogos o sprites de exploración")
+		get_tree().quit(1)
+		return
 	for i in range(1,33):
 		var path := "res://assets/debris/debris-%02d.png" % i
 		if ResourceLoader.exists(path): wreck_sprites.append(load(path))
 	for size in range(1, 6):
 		for variant in range(1, 3):
 			asteroid_sprites.append(load("res://assets/asteroids/asteroid-%d-%d.png" % [size, variant]))
-	if not load_hardpoints() or not load_ship_traits() or not load_ship_catalog():
+	if not load_ship_traits() or not load_ship_catalog() or not load_hardpoints():
 		get_tree().quit(1)
 		return
 	cargo.resize(RES.size())
@@ -1136,29 +1238,84 @@ func _ready() -> void:
 	reset_traffic()
 	load_game()
 	clear_station_approaches()
+	refresh_specials()
 
 var links := generate_links()
 
-func generate_links() -> Array[Vector2i]:
-	var state := 4107
-	var result: Array[Vector2i] = []
-	for i in range(1,5):
-		state = (state*73+41)%65521
-		result.append(Vector2i(state%i,i))
-	while result.size() < 6:
-		state = (state*73+41)%65521
-		var a := state%5
-		state = (state*73+41)%65521
-		var b := state%5
-		var pair := Vector2i(mini(a,b),maxi(a,b))
-		if a != b and not result.has(pair): result.append(pair)
-	result.append_array([Vector2i(4,5),Vector2i(5,6),Vector2i(6,8),Vector2i(8,7)])
+func load_sector_specs() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var file := FileAccess.open("res://data/sectors.txt",FileAccess.READ)
+	if file == null: return result
+	file.get_line()
+	while file.get_position() < file.get_length():
+		var row := file.get_line().strip_edges().split(",")
+		if row.size() != 8 or int(row[0]) != result.size():
+			push_error("Catálogo de sectores inválido")
+			return []
+		result.append({"name":row[1],"map":Vector2(float(row[2]),float(row[3])),"ice":row[4]=="1",
+			"station":row[5]=="1","cluster":row[6]=="1","faction":row[7]})
 	return result
-const MAP_POINTS := [Vector2(-288,0),Vector2(-154,-112),Vector2(-283,-124),Vector2(-295,121),Vector2(-145,111),Vector2(-18,40),Vector2(88,-63),Vector2(289,32),Vector2(190,104)]
+
+func generate_links() -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	var file := FileAccess.open("res://data/sector-links.txt",FileAccess.READ)
+	if file == null: return result
+	file.get_line()
+	while file.get_position() < file.get_length():
+		var row := file.get_line().strip_edges().split(",")
+		if row.size() == 2: result.append(Vector2i(int(row[0]),int(row[1])))
+	return result
+
+func sector_name(index: int) -> String:
+	return sector_specs[index].name
+
+func resolve_sector(value: String) -> int:
+	for i in range(SECTOR_COUNT):
+		if sector_name(i).to_upper() == value.to_upper() or str(4107+i) == value: return i
+	return -1
+
 var fields: Array = []
 var sector_loot: Array = []
 var sector := 0
 var crossed := 0
+var extra_crossings: Dictionary = {}
+var map_zoom := .75
+var map_pan := Vector2.ZERO
+var map_dragging := false
+
+func crossed_link(edge: int) -> bool:
+	return (crossed & (1 << edge)) != 0 if edge < 10 else extra_crossings.has(edge)
+
+func mark_crossed(edge: int) -> void:
+	if edge < 10: crossed |= 1 << edge
+	else: extra_crossings[edge] = true
+
+func saved_crossings() -> Array[int]:
+	var result: Array[int] = []
+	for edge in range(links.size()):
+		if crossed_link(edge): result.append(edge)
+	return result
+
+func restore_crossings(values: Variant) -> void:
+	extra_crossings.clear()
+	if not values is Array: return
+	for value in values:
+		var edge := int(value)
+		if edge >= 0 and edge < links.size(): mark_crossed(edge)
+
+func map_bounds() -> Rect2:
+	var center := get_viewport_rect().size*.5
+	return Rect2(center+Vector2(-345,-150),Vector2(690,300))
+
+func map_point(index: int) -> Vector2:
+	return get_viewport_rect().size*.5+(Vector2(sector_specs[index].map)-Vector2(sector_specs[sector].map))*map_zoom+map_pan
+
+func zoom_map(point: Vector2, direction: int) -> void:
+	var center := get_viewport_rect().size*.5
+	var next := clampf(map_zoom*pow(1.2,direction),.12,2.5)
+	map_pan = point-center-(point-center-map_pan)*next/map_zoom
+	map_zoom = next
+
 var map_open := false
 
 func generate_field(index: int) -> Array:
@@ -1171,10 +1328,26 @@ func generate_field(index: int) -> Array:
 			var point := Vector2(rng.randi_range(-4940,4940),rng.randi_range(-4940,4940))
 			if point.length() < 175: point.x += 245
 			row = PackedStringArray([str(int(point.x)),str(int(point.y)),str(rng.randi_range(12,45)),row[3],row[4],row[5]])
+		if int(row[3]) >= 2: row[3] = str(CONSTRUCTION_ORES[rng.randi_range(0,CONSTRUCTION_ORES.size()-1)])
+		if int(row[4]) >= 2: row[4] = str(CONSTRUCTION_ORES[rng.randi_range(0,CONSTRUCTION_ORES.size()-1)])
+		if sector_specs[index].ice:
+			if field.size()%5 < 4:
+				var first := rng.randi_range(0,1)
+				row[3] = str(first)
+				row[4] = str(1-first) if rng.randi_range(0,1) == 1 else "-1"
+			else:
+				var first: int = CONSTRUCTION_ORES[rng.randi_range(0,CONSTRUCTION_ORES.size()-1)]
+				row[3] = str(first)
+				row[4] = str(CONSTRUCTION_ORES[rng.randi_range(0,CONSTRUCTION_ORES.size()-1)]) if rng.randi_range(0,1) == 1 else "-1"
 		field.append({"p":Vector2(int(row[0]),int(row[1])),"r":int(row[2]),"hp":ROCK_HP,
 			"first":int(row[3]),"second":int(row[4]),"seen":false,
 			"ideal":.25+.05*int(row[5]),"progress":0.0})
 
+	for i in range(field.size()):
+		if (not sector_specs[index].ice or i%5 == 4) and rng.randi_range(0,999) < 10:
+			field[i].first = 71+rng.randi_range(0,1)
+			field[i].second = -1
+	survey.add_giants(field,index)
 	return field
 
 func gate_destination(edge: int, local: int) -> int:
@@ -1182,13 +1355,14 @@ func gate_destination(edge: int, local: int) -> int:
 	return 4107+(link.y if link.x == local else link.x)
 
 func gate_caption(edge: int) -> String:
-	return "G  →  %d" % gate_destination(edge,sector) if crossed & (1 << edge) else "G  Puerta"
+	return "G  →  "+sector_name(gate_destination(edge,sector)-4107) if crossed_link(edge) else "G  Puerta"
 
 func gate_position(edge: int, local: int) -> Vector2:
 	var slot_index := 0
 	for i in range(edge):
 		if local == links[i].x or local == links[i].y: slot_index += 1
-	return [Vector2(0,-1250),Vector2(1250,0),Vector2(0,1250),Vector2(-1250,0)][slot_index]
+	var distance := 4433+posmod(local*97+edge*53,301)
+	return [Vector2(0,-distance),Vector2(distance,0),Vector2(0,distance),Vector2(-distance,0)][slot_index]
 
 const FTL_ATLAS := preload("res://assets/effects/ftl-arrival-v2.png")
 var ftl_cooldown := 0.0
@@ -1197,11 +1371,17 @@ var ftl_depart_age := -1.0
 var ftl_arrival_age := 1.0
 var ftl_exits: Array[Dictionary] = []
 
-func known_sectors() -> int:
-	var known := 1 | (1 << sector)
+func known_sectors() -> Dictionary:
+	var known := {0:true}
+	known[sector] = true
 	for i in range(links.size()):
-		if crossed & (1 << i): known |= (1 << links[i].x) | (1 << links[i].y)
+		if crossed_link(i):
+			known[links[i].x] = true
+			known[links[i].y] = true
 	return known
+
+func ftl_range() -> int:
+	return maxi(1,roundi(3*ship_trait("long_ftl","multiplicador_alcance",1)))
 
 func jump_distance(destination: int) -> int:
 	var distances := {sector:0}
@@ -1217,11 +1397,11 @@ func jump_distance(destination: int) -> int:
 	return 999
 
 func can_ftl(destination: int) -> bool:
-	return not hangar and module_count(10) > 0 and ftl_cooldown <= 0 and destination >= 0 and destination < SECTOR_COUNT and destination != sector and (known_sectors() & (1 << destination)) != 0 and jump_distance(destination) <= 3 and ftl_depart_age < 0 and ftl_arrival_age >= 1
+	return not hangar and module_count(10) > 0 and ftl_cooldown <= 0 and destination >= 0 and destination < SECTOR_COUNT and destination != sector and known_sectors().has(destination) and jump_distance(destination) <= ftl_range() and ftl_depart_age < 0 and ftl_arrival_age >= 1
 
 func request_ftl(destination: int) -> void:
 	if not can_ftl(destination):
-		status = "FTL requiere módulo, destino conocido a 1–3 enlaces y recarga completada"
+		status = "FTL requiere módulo, destino conocido a 1–%d enlaces y recarga completada" % ftl_range()
 		return
 	ftl_destination = destination
 
@@ -1244,9 +1424,12 @@ func commit_ftl() -> void:
 	ftl_depart_age = -1.0
 	ftl_arrival_age = 0.0
 	ftl_destination = -1
-	status = "FTL · Sector %d · Escudos bloqueados 60 s" % (4107+sector)
+	status = "FTL · "+sector_name(sector)+" · Escudos bloqueados 60 s"
 
 func enter_sector(destination: int) -> void:
+	survey.open = false
+	cryo_seconds = 0.0
+	cryo_sector = destination
 	sector = destination
 	rocks = fields[sector]
 	fragments = sector_loot[sector]
@@ -1325,16 +1508,17 @@ func map_ftl_click(point: Vector2) -> void:
 		if Rect2(center+Vector2(-180,45),Vector2(160,35)).has_point(point): confirm_ftl()
 		elif Rect2(center+Vector2(20,45),Vector2(160,35)).has_point(point): ftl_destination = -1
 		return
+	if not map_bounds().has_point(point): return
 	for i in range(SECTOR_COUNT):
-		if (known_sectors() & (1 << i)) != 0 and point.distance_to(center+MAP_POINTS[i]) <= 20:
+		if known_sectors().has(i) and point.distance_to(map_point(i)) <= 16:
 			request_ftl(i)
 			return
 
 func draw_ftl_map(center: Vector2) -> void:
-	label(center+Vector2(-225,125),"FTL · %.0f s de recarga · alcance 3" % ftl_cooldown,14,Color.TURQUOISE)
+	label(center+Vector2(-325,192),"FTL · %.0f s · alcance %d enlaces" % [ftl_cooldown,ftl_range()],14,Color.TURQUOISE)
 	if ftl_destination < 0: return
 	draw_rect(Rect2(center-Vector2(220,70),Vector2(440,165)),Color("#081322"))
-	label(center+Vector2(-200,-40),"¿Saltar al sector %d?" % (4107+ftl_destination),19,Color.TURQUOISE)
+	label(center+Vector2(-200,-40),"¿Saltar a "+sector_name(ftl_destination)+"?",19,Color.TURQUOISE)
 	label(center+Vector2(-200,-10),"Recarga 5 min · Escudos inactivos 1 min",15)
 	menu_button(Rect2(center+Vector2(-180,45),Vector2(160,35)),"Confirmar",true)
 	menu_button(Rect2(center+Vector2(20,45),Vector2(160,35)),"Cancelar")
@@ -1345,8 +1529,10 @@ func cross_gate() -> void:
 		var link: Vector2i = links[i]
 		if sector != link.x and sector != link.y: continue
 		if pos.distance_to(gate_position(i,sector)) > 110: continue
+		cryo_seconds = 0.0
 		sector = link.y if link.x == sector else link.x
-		crossed |= 1 << i
+		cryo_sector = sector
+		mark_crossed(i)
 		rocks = fields[sector]
 		fragments = sector_loot[sector]
 		var arrival := gate_position(i,sector)
@@ -1363,12 +1549,13 @@ func cross_gate() -> void:
 		clear_missiles()
 		explosions.clear()
 		reset_traffic()
-		status = "Salto al sector %d" % (4107+sector)
+		status = "Salto a "+sector_name(sector)
 		return
 	status = "Acércate a una puerta estelar para saltar"
 
 func ship_name() -> String:
-	return specs[selected][9]+(" [Asterión]" if specs[selected][13] == "asterion" else "")
+	var faction: String = FACTION_NAMES.get(specs[selected][13],"")
+	return specs[selected][9]+(" ["+faction+"]" if not faction.is_empty() else "")
 
 func draw_maps(screen: Vector2) -> void:
 	if not hangar:
@@ -1376,7 +1563,7 @@ func draw_maps(screen: Vector2) -> void:
 		draw_rect(bounds,Color("#151d38"))
 		draw_rect(bounds,Color.TURQUOISE,false)
 		for i in range(links.size()):
-			if (crossed & (1 << i)) == 0 or (sector != links[i].x and sector != links[i].y): continue
+			if not crossed_link(i) or (sector != links[i].x and sector != links[i].y): continue
 			draw_circle(bounds.position+(gate_position(i,sector)/10000.0+Vector2(.5,.5))*bounds.size,3,Color.MEDIUM_PURPLE)
 		for index in range(stations.size()):
 			var station: Dictionary = stations[index]
@@ -1391,33 +1578,44 @@ func draw_maps(screen: Vector2) -> void:
 	draw_rect(panel,Color.TURQUOISE,false)
 	label(panel.position+Vector2(20,30),"MAPA ESTELAR  |  M Cerrar",18,Color.TURQUOISE)
 	var visited := known_sectors()
+	var bounds := map_bounds()
 	for i in range(links.size()):
-		if (crossed & (1 << i)) == 0: continue
-		var link: Vector2i = links[i]
-		visited |= (1 << link.x) | (1 << link.y)
-		draw_line(center+MAP_POINTS[link.x],center+MAP_POINTS[link.y],Color.TURQUOISE,2)
+		if crossed_link(i): draw_map_edge(map_point(links[i].x),map_point(links[i].y),bounds)
 	for i in range(SECTOR_COUNT):
-		if (visited & (1 << i)) == 0: continue
-		var point: Vector2 = center+MAP_POINTS[i]
-		if i >= ASTERION_HOME:
+		if not visited.has(i): continue
+		var point := map_point(i)
+		if not bounds.grow(-16).has_point(point): continue
+		if sector_specs[i].faction == "asterion":
 			if i == sector: draw_arc(point,14,0,TAU,32,Color.GOLD,1.5,true)
 			draw_texture_rect(ASTERION_CREST,Rect2(point-Vector2(11,12),Vector2(22,24)),false)
+		elif sector_specs[i].station:
+			draw_rect(Rect2(point-Vector2(6,6),Vector2(12,12)),Color.GOLD if i==sector else Color.WHITE)
 		else:
-			draw_circle(point,8,Color.GOLD if i == sector else Color.WHITE)
-		label(point+Vector2(15,5),str(4107+i),14)
-	if visited & (1 << PIRATE_FRONTIER):
-		label(center+MAP_POINTS[PIRATE_FRONTIER]+Vector2(-35,29),"Vesper · Sin estación",13,Color.PALE_GREEN)
-	var station_labels := []
-	station_labels.resize(SECTOR_COUNT)
-	station_labels.fill(0)
+			draw_circle(point,6,Color.GOLD if i == sector else Color.WHITE)
+		if sector_specs[i].ice: draw_arc(point,11,0,TAU,32,Color.DEEP_SKY_BLUE,2,true)
+		label(Vector2(minf(point.x+15,bounds.end.x-75),clampf(point.y+5,bounds.position.y+16,bounds.end.y-4)),sector_name(i),12)
+	label(panel.position+Vector2(20,365),"Rueda: zoom · Arrastra con botón derecho · G: puerta cercana",13)
+	var station_caption := ""
 	for index in range(stations.size()):
-		if not is_station_discovered(index): continue
-		var station: Dictionary = stations[index]
-		var local := int(station.sector)
-		var caption := String(station.name).trim_prefix("Estación ")
-		label(center+MAP_POINTS[local]+Vector2(-32,29+station_labels[local]*16),caption,13,Color.PALE_GREEN)
-		station_labels[local] += 1
-	label(panel.position+Vector2(20,392),"G salta desde una puerta cercana",14)
+		if stations[index].sector == sector and is_station_discovered(index):
+			station_caption += (" · " if not station_caption.is_empty() else "")+str(stations[index].name)
+	if not station_caption.is_empty(): label(panel.position+Vector2(20,47),station_caption,12,Color.PALE_GREEN)
+
+func draw_map_edge(a: Vector2, b: Vector2, bounds: Rect2) -> void:
+	var delta := b-a
+	var p := [-delta.x,delta.x,-delta.y,delta.y]
+	var q := [a.x-bounds.position.x,bounds.end.x-a.x,a.y-bounds.position.y,bounds.end.y-a.y]
+	var lower := 0.0
+	var upper := 1.0
+	for side in range(4):
+		if is_zero_approx(p[side]):
+			if q[side] < 0: return
+		else:
+			var ratio: float = q[side]/p[side]
+			if p[side] < 0: lower = maxf(lower,ratio)
+			else: upper = minf(upper,ratio)
+		if lower > upper: return
+	draw_line(a+delta*lower,a+delta*upper,Color.TURQUOISE,2)
 
 func stat(i: int) -> int:
 	return int(specs[selected][i])
@@ -1467,8 +1665,9 @@ func choose(i: int) -> void:
 var extra_target: Dictionary = {}
 var console_open := false
 var console_text := ""
-var console_result := "show_vectors 0/1 | tp <sector>"
+var console_result := "show_vectors 0/1 | sector_stats 0/1 | tp <sector>"
 var show_vectors := false
+var show_sector_stats := false
 var player_thrust := 0.0
 
 func entities() -> Array[Dictionary]:
@@ -1513,7 +1712,7 @@ func click_target(pointer: Vector2, deselect_empty: bool = false) -> void:
 
 	if deselect_empty: select_entity({})
 
-const CONSOLE_COMMANDS := ["show_vectors","tp"]
+const CONSOLE_COMMANDS := ["show_vectors","tp","sector_stats"]
 var completion_seed := ""
 var completion_last := ""
 var completion_index := -1
@@ -1526,7 +1725,7 @@ func complete_console() -> void:
 	var head := completion_seed.left(split_at)
 	var prefix := completion_seed.substr(split_at).to_lower()
 	var options: Array[String] = []
-	var source: Array = CONSOLE_COMMANDS if head.strip_edges().is_empty() else (["0","1"] if head.strip_edges().to_lower() == "show_vectors" else [])
+	var source: Array = CONSOLE_COMMANDS if head.strip_edges().is_empty() else (["0","1"] if head.strip_edges().to_lower() in ["show_vectors","sector_stats"] else [])
 	for option in source:
 		if option.begins_with(prefix): options.append(option)
 	if options.is_empty(): return
@@ -1539,27 +1738,53 @@ func console_command() -> void:
 	if parts.size() == 2 and parts[0] == "show_vectors" and parts[1] in ["0","1"]:
 		show_vectors = parts[1] == "1"
 		console_result = "show_vectors "+parts[1]
+	elif parts.size() == 2 and parts[0] == "sector_stats" and parts[1] in ["0","1"]:
+		show_sector_stats = parts[1] == "1"
+		console_result = "sector_stats "+parts[1]
 	elif parts.size() == 2 and parts[0] == "tp":
-		if parts[1].is_valid_int():
-			var destination := int(parts[1])-4107
-			if destination >= 0 and destination < SECTOR_COUNT and destination != sector:
-				hangar = false
-				map_open = false
-				help_open = false
-				inventory_open = false
-				market = 0
-				quantity_row = -1
-				dragged_module = -1
-				reset_traffic_on_launch = false
-				enter_sector(destination)
-				ftl_destination = -1
-				ftl_depart_age = -1
-				ftl_arrival_age = 1
-				status = "Teletransporte a sector %d" % (4107+sector)
-				console_result = status
-	else: console_result = "Uso: show_vectors 0/1 | tp <sector>"
+		var destination := resolve_sector(parts[1])
+		if destination >= 0 and destination != sector:
+			hangar = false
+			map_open = false
+			help_open = false
+			inventory_open = false
+			market = 0
+			quantity_row = -1
+			dragged_module = -1
+			reset_traffic_on_launch = false
+			enter_sector(destination)
+			ftl_destination = -1
+			ftl_depart_age = -1
+			ftl_arrival_age = 1
+			status = "Teletransporte a "+sector_name(sector)
+			console_result = status
+	else: console_result = "Uso: show_vectors 0/1 | sector_stats 0/1 | tp <sector>"
 	console_text = ""
 	completion_index = -1
+
+func sector_stats_rows() -> Array[String]:
+	var rows: Array[String] = ["Nombre: "+sector_name(sector)]
+	var destinations: Array[String] = []
+	for link in links:
+		if link.x == sector: destinations.append(sector_name(link.y))
+		elif link.y == sector: destinations.append(sector_name(link.x))
+	rows.append("Conexiones (%d):" % destinations.size())
+	for destination in destinations: rows.append("  "+destination)
+	var alive := 0
+	for npc in npcs:
+		if npc.hp > 0: alive += 1
+	rows.append("NPCs: %d" % alive)
+	rows.append("Fondo: "+str(sector_backgrounds.get(4107+sector,{}).get("id","Sin asignar")))
+	return rows
+
+func draw_sector_stats(screen: Vector2) -> void:
+	if not show_sector_stats: return
+	var rows := sector_stats_rows()
+	var panel := Rect2(maxf(15,screen.x-492),18,340,44+rows.size()*21)
+	draw_rect(panel,Color("#08111f"))
+	draw_rect(panel,Color.TURQUOISE,false)
+	label(panel.position+Vector2(12,25),"DATOS DEL SECTOR",17,Color.TURQUOISE)
+	for i in range(rows.size()): label(panel.position+Vector2(12,49+i*21),rows[i],15)
 
 func draw_console(screen: Vector2) -> void:
 	if not console_open: return
@@ -1585,14 +1810,16 @@ func draw_target_info(screen: Vector2) -> void:
 		rows.append("Asteroide")
 		rows.append("Casco estimado ~%d" % (maxi(1,roundi(rock.hp/100.0)*100)))
 		if rock.seen:
-			var count := 2+asteroid_size(rock.r)*2
+			var count: int = survey.pieces(rock)
 			rows.append("%s · %d U" % [RES[rock.first],count*10 if rock.second < 0 else count*5])
 			if rock.second >= 0: rows.append("%s · %d U" % [RES[rock.second],count*5])
+			if rock.get("special_seen",false) and int(rock.get("special_amount",0)) > 0: rows.append("Traza: %s · %d U" % [RES[int(rock.special_kind)],rock.special_amount])
 		else: rows.append("Contenido sin escanear · TAB")
 	elif not npc_target.is_empty() and npc_target.hp > 0:
 		rows.append(str(specs[npc_target.ship][9])+" · "+str(npc_target.role))
 		rows.append(str(specs[npc_target.ship][10]))
-		if specs[npc_target.ship][13] == "asterion": rows.append("Imperio de Asterión")
+		var faction: String = FACTION_NAMES.get(specs[npc_target.ship][13],"")
+		if not faction.is_empty(): rows.append("Imperio de "+faction)
 		if npc_target.get("scanned",false):
 			rows.append("Casco %d / %d" % [npc_target.hp,int(specs[npc_target.ship][2])])
 			var amount := int(npc_target.cargo)
@@ -1610,7 +1837,7 @@ func draw_target_info(screen: Vector2) -> void:
 		rows.append(extra_target.kind)
 		if extra_target.has("module"): rows.append(MODULE_NAMES[extra_target.module])
 		elif extra_target.kind == "Estación": rows.append(str(extra_target.data.name))
-		elif extra_target.kind == "Puerta": rows.append("Destino: sector %d" % gate_destination(int(extra_target.edge),sector))
+		elif extra_target.kind == "Puerta": rows.append("Destino: sector "+sector_name(gate_destination(int(extra_target.edge),sector)-4107))
 		elif extra_target.kind == "Recursos": rows.append("%s · %d U" % [RES[extra_target.data.resource],extra_target.data.amount])
 	if rows.is_empty(): return
 	var at := Vector2(screen.x-275,145)
@@ -1636,6 +1863,10 @@ func launch() -> void:
 	hangar = false
 
 func _input(event: InputEvent) -> void:
+	if survey.open:
+		if event is InputEventKey and event.pressed and event.keycode in [KEY_ESCAPE,KEY_ENTER,KEY_KP_ENTER]: survey.open = false
+		elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and survey.close_rect(get_viewport_rect().size).has_point(event.position): survey.open = false
+		return
 	if player_destroying or ftl_depart_age >= 0 or ftl_arrival_age < 1: return
 	if event is InputEventKey and event.keycode == KEY_B and not event.pressed:
 		if auto_station >= 0: status = "Autoatraque cancelado"
@@ -1653,6 +1884,9 @@ func _input(event: InputEvent) -> void:
 			elif event.unicode >= 32 and console_text.length() < 100: console_text += char(event.unicode)
 			return
 	if console_open: return
+	if industry.open:
+		industry.input(self,event)
+		return
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		if ftl_destination >= 0:
@@ -1668,16 +1902,28 @@ func _input(event: InputEvent) -> void:
 		elif map_open:
 			map_open = false
 		return
-	if map_open and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		map_ftl_click(event.position)
-		return
+	if map_open:
+		if event is InputEventMouseMotion and map_dragging:
+			map_pan += event.relative
+			return
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_RIGHT:
+				map_dragging = event.pressed and map_bounds().has_point(event.position)
+			elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN]:
+				if map_bounds().has_point(event.position): zoom_map(event.position,1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1)
+			elif event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+				map_ftl_click(event.position)
+			return
 	if market > 0:
 		if event is InputEventKey: quantity_key(event)
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: market_click(event.position)
 		return
 	if hangar and not inventory_open and not map_open and not help_open and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		for i in range(SECTOR_COUNT):
+		for i in range(6):
 			if market_button(i).has_point(event.position):
+				if i == 5:
+					industry.open = true
+					return
 				if i == 2:
 					inventory_open = true
 					return
@@ -1688,6 +1934,7 @@ func _input(event: InputEvent) -> void:
 					launch()
 					return
 				market = i+1
+				market_page = 0
 				quantity_row = -1
 				market_status = ""
 				return
@@ -1704,9 +1951,12 @@ func _input(event: InputEvent) -> void:
 			if slot_number >= 0 and slot_number < available.size():
 				mode = available[slot_number]
 		match event.keycode:
+			KEY_F:
+				if hangar: industry.open = true
 			KEY_J:
 				if not hangar and not trader.is_empty() and trader.hp > 0 and pos.distance_to(trader.p) <= 220:
 					market = 3
+					market_page = 0
 					market_status = ""
 					quantity_row = -1
 			KEY_ENTER:
@@ -1730,6 +1980,8 @@ func _input(event: InputEvent) -> void:
 				if hangar: paint = (paint + 1) % PAINT.size()
 			KEY_M:
 				map_open = not map_open
+				map_pan = Vector2.ZERO
+				map_dragging = false
 				ftl_destination = -1
 			KEY_G:
 				cross_gate()
@@ -1764,7 +2016,7 @@ func axis(negative: Key, positive: Key) -> int:
 
 func _physics_process(dt: float) -> void:
 	queue_redraw()
-	if map_open or market == 3 or console_open: return
+	if map_open or market == 3 or console_open or survey.open: return
 	update_ftl(dt)
 	repair_stations(dt)
 	update_shields(dt)
@@ -1773,6 +2025,7 @@ func _physics_process(dt: float) -> void:
 	if hangar:
 		decay_mining(dt, -1)
 		return
+	update_player_cryo(dt)
 	update_asteroid_respawn(dt)
 	angle += axis(KEY_Q,KEY_E) * deg_to_rad(maxf(23,159-stat(3))*(1.0+.1*module_count(7))) * dt
 	var f := forward()
@@ -1781,7 +2034,7 @@ func _physics_process(dt: float) -> void:
 	var main := 1.0 if Input.is_key_pressed(KEY_W) else (-.5 if Input.is_key_pressed(KEY_S) else 0.0)
 	var applied := (f * main + f.rotated(PI/2) * axis(KEY_A,KEY_D) * .25) * thrust
 	vel += applied*dt
-	vel = vel.limit_length(maxf(95,345-stat(3)*1.62)*boost)
+	vel = vel.limit_length(player_cruise_speed())
 	var manual_brake := Input.is_key_pressed(KEY_X)
 	var translating := Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_D)
 	if manual_brake or (coupled and not translating):
@@ -1822,9 +2075,12 @@ func _physics_process(dt: float) -> void:
 	if ping < 650:
 		ping = minf(650,ping+830*dt)
 		for rock in rocks:
-			if rock.hp > 0 and rock.p.distance_to(ping_origin) <= ping+rock.r: rock.seen = true
+			if rock.hp > 0 and rock.p.distance_to(ping_origin) <= ping+rock.r:
+				rock.seen = true
+				if module_count(11) > 0: rock.special_seen = true
 		for npc in npcs:
 			if npc.hp > 0 and npc.p.distance_to(ping_origin) <= ping+float(specs[npc.ship][3])*.32: npc.scanned = true
+		if ping >= 650: survey.finish_scan(self)
 	cooldown = maxf(0, cooldown - dt)
 	missile_cooldown = maxf(0, missile_cooldown - dt)
 	if mode in [1,5] and has_module_for_mode() and Input.is_key_pressed(KEY_SPACE) and missile_cooldown <= 0:
@@ -1990,21 +2246,36 @@ func update_mining(dt: float, f: Vector2) -> void:
 		status = "Sobrecarga: 10% recuperable"
 		if hp <= 0: destroyed()
 	elif absf(power/100.0-window_center(rock)) <= mining_margin(hits):
-		rock.progress += dt/3
+		rock.progress += dt/(3.0*maxf(1,float(rock.r)/45))
 		if rock.progress >= 1:
 			drop(rock,10)
 			status = "Extracción completa"
 	else:
 		rock.progress = maxf(0,rock.progress-dt*.25)
 
+func refresh_specials() -> void:
+	for field in fields:
+		var alive: Array = []
+		for rock in field:
+			rock.special_amount = 0
+			rock.special_seen = false
+			if rock.hp > 0 and not rock.has("fade"): alive.append(rock)
+		alive.shuffle()
+		for i in range(mini(alive.size(),randi_range(3,7))):
+			alive[i].special_kind = SPECIAL_ORES[randi_range(0,SPECIAL_ORES.size()-1)]
+			alive[i].special_amount = randi_range(1,3)
+
 func asteroid_size(radius: int) -> int:
 	return clampi(floori((radius - 12) / 7.0), 0, 4)
 
 func drop(rock: Dictionary, amount: int) -> void:
+	if int(rock.get("special_amount",0)) > 0:
+		fragments.append({"p":rock.p,"resource":int(rock.special_kind),"amount":maxi(1,ceili(int(rock.special_amount)*amount/10.0))})
+		rock.special_amount = 0
 	rock.mined = true
 	rock.hp = 0
 	target = -1
-	var count := 2 + asteroid_size(rock.r) * 2
+	var count: int = survey.pieces(rock)
 	for i in range(count):
 		fragments.append({"p":rock.p+Vector2.RIGHT.rotated(i*TAU/count)*rock.r*.65,
 			"resource":rock.second if rock.second >= 0 and i%2 == 1 else rock.first,"amount":amount})
@@ -2013,13 +2284,17 @@ var respawn_clock := 0.0
 
 func respawn_position(field: Array, field_index: int, rock: Dictionary) -> Vector2:
 	for attempt in range(32):
-		var candidate := Vector2(randf_range(-4850,4850),randf_range(-4850,4850))
-		if candidate.length() < 300 or (sector == field_index and candidate.distance_to(pos) < 180): continue
+		var bound := 5000-maxf(150,rock.r+30)
+		var candidate := Vector2(randf_range(-bound,bound),randf_range(-bound,bound))
+		if candidate.length() < 300 or (sector == field_index and candidate.distance_to(pos) < rock.r+180): continue
 		var blocked := false
 		for edge in range(links.size()):
-			if field_index in [links[edge].x,links[edge].y] and candidate.distance_to(gate_position(edge,field_index)) < 140:
+			if field_index in [links[edge].x,links[edge].y] and candidate.distance_to(gate_position(edge,field_index)) < rock.r+300:
 				blocked = true
 				break
+		if blocked: continue
+		for station in stations:
+			if station.sector == field_index and candidate.distance_to(station.p) < station.size+CAPITAL_LENGTH+rock.r: blocked = true; break
 		if blocked: continue
 		for other in field:
 			if (other.hp > 0 or float(other.get("fade",-1)) >= 0) and candidate.distance_to(other.p) < rock.r+other.r+12:
@@ -2083,8 +2358,8 @@ func save_game() -> void:
 		var wrecks: Array = []
 		for item in wreck_fields[i]: wrecks.append([item.p.x,item.p.y,item.sprite,item.angle,item.progress,item.get("hits",0)])
 		saved_wrecks.append(wrecks)
-	file.store_string(JSON.stringify({"guard_wait":guard_wait,"extra_stations":stations.slice(2).map(func(station: Dictionary) -> Dictionary: return {"hp":station.hp,"discovered":station.discovered,"reserve":station.reserve,"stock":station.stock,"modules":station.modules}),"ftl_cooldown":ftl_cooldown,"shields":shield_states,"ship":selected,"paint":paint,"mode":mode,"motor":motor,"coupled":coupled,"hangar":hangar,"dock_station":dock_station,"dock_port":dock_port,"station_discovered":station_discovered,"nacar_discovered":nacar_discovered,"nacar_hp":stations[1].hp,"nacar_reserve":nacar_reserve,"nacar_stock":nacar_stock,"nacar_modules":nacar_modules,"freight":freight,"station_hp":stations[0].hp,"station_reserve":station_reserve,"module_locations":module_locations,"module_types":module_types,"credits":credits,"mineral_quantities":mineral_quantities,"object_quantities":object_quantities,"respawn_clock":respawn_clock,"mineral_stock":mineral_stock,"module_stock":module_stock,"module_drops":module_drops,
-		"x":pos.x,"y":pos.y,"vx":vel.x,"vy":vel.y,"angle":angle,"hp":hp,"cargo":cargo,"inventory":inventory,"field":all_fields[sector],"loot":all_loot[sector],"sector":sector,"crossed":crossed,"fields":all_fields,"sector_loot":all_loot,"wrecks":saved_wrecks}))
+	file.store_string(JSON.stringify({"geology_version":1,"cryo_seconds":cryo_seconds if cryo_sector == sector else 0.0,"guard_wait":guard_wait,"extra_stations":stations.slice(2).map(func(station: Dictionary) -> Dictionary: return {"hp":station.hp,"discovered":station.discovered,"reserve":station.reserve,"stock":station.stock,"modules":station.modules}),"ftl_cooldown":ftl_cooldown,"shields":shield_states,"ship":selected,"paint":paint,"mode":mode,"motor":motor,"coupled":coupled,"hangar":hangar,"dock_station":dock_station,"dock_port":dock_port,"station_discovered":station_discovered,"nacar_discovered":nacar_discovered,"nacar_hp":stations[1].hp,"nacar_reserve":nacar_reserve,"nacar_stock":nacar_stock,"nacar_modules":nacar_modules,"freight":freight,"station_hp":stations[0].hp,"station_reserve":station_reserve,"module_locations":module_locations,"module_types":module_types,"credits":credits,"mineral_quantities":mineral_quantities,"object_quantities":object_quantities,"respawn_clock":respawn_clock,"mineral_stock":mineral_stock,"module_stock":module_stock,"module_drops":module_drops,
+		"x":pos.x,"y":pos.y,"vx":vel.x,"vy":vel.y,"angle":angle,"hp":hp,"cargo":cargo,"inventory":inventory,"field":all_fields[sector],"loot":all_loot[sector],"sector":sector,"crossed":crossed,"crossed_links":saved_crossings(),"industry_remainders":industry.remainders,"fields":all_fields,"sector_loot":all_loot,"wrecks":saved_wrecks}))
 	status = "Partida guardada"
 
 func load_game() -> void:
@@ -2108,7 +2383,8 @@ func load_game() -> void:
 	vel = Vector2(data.vx,data.vy)
 	angle = data.angle
 	hp = int(data.hp)
-	cargo = data.cargo
+	industry.load_remainders(data.get("industry_remainders",[]))
+	cargo = industry.extend(data.cargo)
 	load_modules(data.get("module_locations",[]),data.get("module_types",[0,1,2,3]))
 	load_shields(data.get("shields",[]))
 	ftl_cooldown = clampf(float(data.get("ftl_cooldown",0)),0,300)
@@ -2120,10 +2396,10 @@ func load_game() -> void:
 	load_quantities(data.get("object_quantities",[]),object_quantities)
 	respawn_clock = clampf(float(data.get("respawn_clock",0)),0,300)
 	credits = maxi(0,int(data.get("credits",500)))
-	mineral_stock.assign(data.get("mineral_stock",[20,20,20,20,20,20,20,20,20,20]))
+	mineral_stock.assign(industry.extend(data.get("mineral_stock",industry.stock(20))))
 	if not data.has("mineral_stock"): mineral_stock[2] += maxi(0,int(data.get("station_reserve",0)))
 	module_stock.assign(data.get("module_stock",[2,2,2,2,2]))
-	while module_stock.size() < MODULE_NAMES.size(): module_stock.append(2)
+	while module_stock.size() < MODULE_NAMES.size(): module_stock.append(0 if module_stock.size() == 11 else 2)
 	module_drops = data.get("module_drops",empty_sector_arrays())
 	while module_drops.size() < SECTOR_COUNT: module_drops.append([])
 	guard_wait.fill(0)
@@ -2132,9 +2408,12 @@ func load_game() -> void:
 		guard_wait[i] = clampf(float(saved_guards[i]),0,GUARD_RESPAWN)
 	var stored: Variant = data.get("inventory", [])
 	for i in range(RES.size()):
-		inventory[i] = maxi(0, int(stored[i])) if stored is Array and stored.size() == RES.size() else 0
+		inventory[i] = maxi(0, int(stored[i])) if stored is Array and i < stored.size() else 0
 	sector = clampi(int(data.get("sector",0)),0,SECTOR_COUNT-1)
-	crossed = clampi(int(data.get("crossed",0)),0,(1<<links.size())-1)
+	cryo_seconds = clampf(float(data.get("cryo_seconds",0)),0,420)
+	cryo_sector = sector
+	crossed = clampi(int(data.get("crossed",0)),0,(1<<10)-1)
+	restore_crossings(data.get("crossed_links",[]))
 	for index in range(SECTOR_COUNT):
 		fields[index] = generate_field(index)
 		sector_loot[index] = []
@@ -2150,7 +2429,8 @@ func load_game() -> void:
 				fields[index][i].seen = saved_field[i][1]
 				fields[index][i].progress = saved_field[i][2]
 				if saved_field[i].size() >= 7:
-					fields[index][i].p = Vector2(saved_field[i][3],saved_field[i][4])
+					if int(data.get("geology_version",0)) >= 1 or fields[index][i].r < 150:
+						fields[index][i].p = Vector2(saved_field[i][3],saved_field[i][4])
 					fields[index][i].mined = saved_field[i][5]
 					if float(saved_field[i][6]) >= 0: fields[index][i].fade = float(saved_field[i][6])
 		for item in loot:
@@ -2172,8 +2452,8 @@ func load_game() -> void:
 	stations[1].hp = clampi(int(data.get("nacar_hp",25000)),1,25000)
 	nacar_reserve = maxi(0,int(data.get("nacar_reserve",0)))
 	nacar_stock.assign(data.get("nacar_stock",[20,20,20,20,20,20,20,20,20,20]))
-	nacar_modules.assign(data.get("nacar_modules",[2,2,2,2,2,2,2,2,2,2,2]))
-	while nacar_modules.size() < MODULE_NAMES.size(): nacar_modules.append(2)
+	nacar_modules.assign(data.get("nacar_modules",[2,2,2,2,2,2,2,2,2,2,2,0,2,2]))
+	while nacar_modules.size() < MODULE_NAMES.size(): nacar_modules.append(0 if nacar_modules.size() == 11 else 2)
 	freight = data.get("freight",{})
 	station_discovered = bool(data.get("station_discovered",false))
 	station_reserve = maxi(0,int(data.get("station_reserve",0)))
@@ -2192,7 +2472,7 @@ func load_game() -> void:
 		stations[index].hp = stations[index].max_hp
 		stations[index].discovered = false
 		stations[index].reserve = 0
-		stations[index].stock = [20,20,20,20,20,20,20,20,20,20]
+		stations[index].stock = industry.stock(20)
 		stations[index].modules = new_station_modules()
 		var extra: Array = data.get("extra_stations",[])
 		if index-2 >= extra.size(): continue
@@ -2201,11 +2481,15 @@ func load_game() -> void:
 		stations[index].discovered = bool(saved.get("discovered",false))
 		stations[index].reserve = maxi(0,int(saved.get("reserve",0)))
 		var stock: Array = saved.get("stock",[])
-		if stock.size() == RES.size(): stations[index].stock = stock
+		if not stock.is_empty(): stations[index].stock = industry.extend(stock)
 		var modules: Array = saved.get("modules",[])
 		for slot_index in range(mini(modules.size(),MODULE_NAMES.size())):
 			stations[index].modules[slot_index] = maxi(0,int(modules[slot_index]))
 	clear_station_approaches()
+	nacar_stock = industry.extend(nacar_stock)
+	while nacar_modules.size() < MODULE_NAMES.size(): nacar_modules.append(0 if nacar_modules.size() == 11 else 2)
+	refresh_specials()
+	industry.open = false
 	status = "Partida cargada"
 	normalize_weapon()
 
@@ -2268,7 +2552,7 @@ func shield_sprite(ship: int, at: Vector2, height: float, flash: float, break_fl
 		shield_art.append(null)
 		shield_break_art.append(null)
 	if shield_art[ship] == null:
-		var mask := ships[ship].get_image()
+		var mask := ships[ship].get_image().duplicate()
 		var h := int(specs[ship][3])
 		var w := maxi(1,roundi(h*float(mask.get_width())/mask.get_height()))
 		mask.resize(w,h,Image.INTERPOLATE_LANCZOS)
@@ -2313,7 +2597,7 @@ const SLOT_COLORS := [Color.SALMON,Color.SKY_BLUE,Color.TURQUOISE,Color.KHAKI]
 const HELP_GROUPS := [
 	["VUELO", "Enter  Despegar", "B  Atracar", "W/S  Empuje longitudinal", "A/D  Empuje lateral", "Q/E  Girar", "X  Frenar", "C  Coupled / Decoupled", "Rueda  Zoom"],
 	["INTERACCIÓN", "Tab  Escanear", "T / clic  Seleccionar objetivo", "Y  Quitar objetivo", "1–5  Módulos equipados", "Espacio  Usar módulo", "Minería: Mayús + rueda u O/L"],
-	["HANGAR Y MAPA", "Inventario: botón del hangar", "Clic/flechas  Elegir nave", "P  Pintura   N  Motor", "U  Descargar bodega", "M  Mapa   G  Saltar","J  Comerciar con trader", "F5  Guardar   F9  Cargar", "H / Esc  Cerrar ayuda"]
+	["HANGAR Y MAPA", "Inventario: botón del hangar", "Clic/flechas  Elegir nave", "P  Pintura   N  Motor", "U  Descargar   F  Industria", "M  Mapa   G  Saltar","J  Comerciar con trader", "F5  Guardar   F9  Cargar", "H / Esc  Cerrar ayuda"]
 ]
 
 func draw_menu_panel(center: Vector2, dimensions: Vector2, title: String, hint: String) -> Vector2:
@@ -2324,8 +2608,8 @@ func draw_menu_panel(center: Vector2, dimensions: Vector2, title: String, hint: 
 	label(panel.position+Vector2(18,dimensions.y-13),hint,13,Color.LIGHT_SLATE_GRAY)
 	return panel.position
 
-const MODULE_NAMES := ["Ametralladora","Cohete","Equipo de minería","Equipo de salvaging","Tractor beam Tier0","Misil guiado","Thrusters","Gyro","PDC","Escudo","FTL"]
-const MODULE_ICONS := ["AM","CO","MN","SV","TB","MI","TH","GY","PD","ES","FTL"]
+const MODULE_NAMES := ["Ametralladora","Cohete","Equipo de minería","Equipo de salvaging","Tractor beam Tier0","Misil guiado","Thrusters","Gyro","PDC","Escudo","FTL","Detector de trazas","Termorregulador Boreal","Espectrómetro de materiales"]
+const MODULE_ICONS := ["AM","CO","MN","SV","TB","MI","TH","GY","PD","ES","FTL","DT","TB","EM"]
 const MODULE_DETAILS := [
 	["Dispara ráfagas de trazadoras.","Modo: Armamento"],
 	["Dispara un cohete explosivo.","Modo: Cohetes"],
@@ -2337,7 +2621,10 @@ const MODULE_DETAILS := [
 	["+10 % de velocidad de giro."],
 	["Defensa en ráfagas de tres tiros."],
 	["+50 % del casco como escudo por módulo.","Regenera tras 10 s sin recibir daño."],
-	["Salto de hasta 3 enlaces desde el mapa.","Recarga 300 s · escudo bloqueado 60 s."]
+	["Salto base de 3 enlaces.","Recarga 300 s · escudo bloqueado 60 s."],
+	["Revela especiales al escanear asteroides.","Módulo raro · sin stock ni portadores."],
+	["Inmunidad a ralentización criogénica.","Utilidad · efecto pasivo al equiparlo."],
+	["TAB muestra reservas totales del sector.","Incluye especiales, sin ubicaciones."]
 ]
 const MODULE_MODES := [0,1,2,4,-1,5]
 const EQUIPMENT_SIZE := Vector2(900,406)
@@ -2356,12 +2643,12 @@ func utility_location(slot_index: int, ship_index: int) -> int:
 
 const CATEGORY_START := [64,352,256,448]
 const CATEGORY_STRIDE := [5,4,3,4]
-const MODULE_CATEGORY := [0,0,0,0,2,0,3,3,1,1,2]
+const MODULE_CATEGORY := [0,0,0,0,2,0,3,3,1,1,2,2,2,2]
 const MODULE_TEXTURES := [
 	preload("res://assets/modules/ametralladora.png"),preload("res://assets/modules/cohete.png"),
 	preload("res://assets/modules/mineria.png"),preload("res://assets/modules/salvaging.png"),
 	preload("res://assets/modules/tractor.png"),preload("res://assets/modules/misil.png"),
-	preload("res://assets/modules/thrusters.png"),preload("res://assets/modules/gyro.png"),preload("res://assets/modules/pdc.png"),preload("res://assets/shields/shield.svg"),preload("res://assets/modules/ftl.svg")]
+	preload("res://assets/modules/thrusters.png"),preload("res://assets/modules/gyro.png"),preload("res://assets/modules/pdc.png"),preload("res://assets/shields/shield.svg"),preload("res://assets/modules/ftl.svg"),preload("res://assets/modules/trace-detector.svg"),preload("res://assets/modules/boreal.svg"),preload("res://assets/modules/material-spectrometer.svg")]
 const MODULE_WORLD := [
 	preload("res://assets/modules/thrusters-world.png"),preload("res://assets/modules/gyro-world.png"),
 	preload("res://assets/modules/pdc-world.png")]
@@ -2623,20 +2910,21 @@ func module_icon(at: Vector2, item: int, size: float = 18) -> void:
 	draw_rect(Rect2(at-Vector2(10,9),Vector2(20,18)),Color("#203f4d"))
 	label(at+Vector2(-8,5),MODULE_ICONS[item],11,Color.PALE_GREEN)
 
-const MINERAL_PRICES := [5,7,8,12,20,10,14,9,15,25]
-const MODULE_PRICES := [120,180,150,150,220,320,240,200,360,300,5000]
+var MINERAL_PRICES: Array[int] = industry.prices
+const MODULE_PRICES := [120,180,150,150,220,320,240,200,360,300,5000,15000,1800,2600]
 var credits := 500
-const NACAR_PRICES := [3,2,22,6,46,25,8,23,8,54]
-var nacar_stock: Array[int] = [20,20,20,20,20,20,20,20,20,20]
+var NACAR_PRICES: Array[int] = industry.prices.duplicate()
+var nacar_stock: Array[int] = industry.stock(20)
 var nacar_reserve := 0
-var trader_stock: Array[int] = [5,5,5,5,5,5,5,5,5,5]
-var mineral_stock: Array[int] = [20,20,20,20,20,20,20,20,20,20]
-var nacar_modules: Array[int] = [2,2,2,2,2,2,2,2,2,2,2]
-var module_stock: Array[int] = [2,2,2,2,2,2,2,2,2,2,2]
+var trader_stock: Array[int] = industry.stock(5)
+var mineral_stock: Array[int] = industry.stock(20)
+var nacar_modules: Array[int] = [2,2,2,2,2,2,2,2,2,2,2,0,2,2]
+var module_stock: Array[int] = [2,2,2,2,2,2,2,2,2,2,2,0,2,2]
 var module_types: Array[int] = [0,1,2,3]
 var module_drops: Array = empty_sector_arrays()
 var market := 0
 var market_status := ""
+var market_page := 0
 const MARKET_SIZE := Vector2(790,520)
 
 func free_module_cell() -> int:
@@ -2670,8 +2958,8 @@ func first_stored_module(kind: int) -> int:
 		if module_types[i] == kind and module_locations[i] < 64: return i
 	return -1
 
-var mineral_quantities: Array[int] = [1,1,1,1,1,1,1,1,1,1,1]
-var object_quantities: Array[int] = [1,1,1,1,1,1,1,1,1,1,1]
+var mineral_quantities: Array[int] = industry.extend([],1)
+var object_quantities: Array[int] = [1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 var quantity_row := -1
 var replace_quantity := false
 
@@ -2795,8 +3083,15 @@ func market_click(pointer: Vector2) -> void:
 		return
 	quantity_row = -1
 	var count := MODULE_NAMES.size() if market == 2 else RES.size()
-	for row in range(count):
-		var y := 94+row*33
+	market_page = clampi(market_page,0,(count-1)/11)
+	if Rect2(at+Vector2(320,48),Vector2(70,28)).has_point(pointer):
+		market_page = maxi(0,market_page-1)
+		return
+	if Rect2(at+Vector2(485,48),Vector2(70,28)).has_point(pointer):
+		market_page = mini((count-1)/11,market_page+1)
+		return
+	for row in range(market_page*11,mini(count,(market_page+1)*11)):
+		var y := 94+(row%11)*33
 		if Rect2(at+Vector2(315,y),Vector2(118,28)).has_point(pointer): trade(row,true)
 		elif Rect2(at+Vector2(443,y),Vector2(118,28)).has_point(pointer): trade(row,false)
 		elif Rect2(at+Vector2(571,y),Vector2(72,28)).has_point(pointer):
@@ -2805,7 +3100,7 @@ func market_click(pointer: Vector2) -> void:
 
 func draw_market(center: Vector2) -> void:
 	var objects := market == 2
-	var at := draw_menu_panel(center,MARKET_SIZE,"Mercado Objetos" if objects else ("Trader" if market == 3 else "Mercado Minería"),market_status)
+	var at := draw_menu_panel(center,MARKET_SIZE,"Mercado Objetos" if objects else ("Trader" if market == 3 else "Mercado Materiales"),market_status)
 	label(at+Vector2(23,62),"%d Créditos" % credits,19,Color.PALE_GREEN)
 	label(at+Vector2(205,85),"BODEGA" if market == 3 else "INVENTARIO",16,Color.TURQUOISE)
 	label(at+Vector2(571,85),"CANTIDAD",14,Color.TURQUOISE)
@@ -2813,8 +3108,12 @@ func draw_market(center: Vector2) -> void:
 	menu_button(Rect2(at+Vector2(650,13),Vector2(120,35)),"Cerrar")
 	var count := MODULE_NAMES.size() if objects else RES.size()
 	var quantities := market_quantities()
-	for row in range(count):
-		var y := 94+row*33
+	market_page = clampi(market_page,0,(count-1)/11)
+	menu_button(Rect2(at+Vector2(320,48),Vector2(70,28)),"←")
+	label(at+Vector2(400,68),"%d / %d" % [market_page+1,(count-1)/11+1],14)
+	menu_button(Rect2(at+Vector2(485,48),Vector2(70,28)),"→")
+	for row in range(market_page*11,mini(count,(market_page+1)*11)):
+		var y := 94+(row%11)*33
 		var owned := 0
 		if objects:
 			for i in range(module_types.size()):
@@ -2917,8 +3216,8 @@ func _draw() -> void:
 		draw_stations()
 		for i in range(rocks.size()):
 			var rock: Dictionary = rocks[i]
-			if (rock.hp <= 0 and not rock.has("fade")) or absf(rock.p.x-pos.x) > center.x/zoom+150 or absf(rock.p.y-pos.y) > center.y/zoom+90: continue
-			var texture := asteroid_sprites[asteroid_size(rock.r) * 2 + i % 2]
+			if (rock.hp <= 0 and not rock.has("fade")) or absf(rock.p.x-pos.x) > center.x/zoom+rock.r+20 or absf(rock.p.y-pos.y) > center.y/zoom+rock.r+20: continue
+			var texture: Texture2D = survey.material_art.get(int(rock.first),asteroid_sprites[asteroid_size(rock.r) * 2 + i % 2])
 			var extent: Vector2 = Vector2.ONE * rock.r
 			draw_texture_rect(texture, Rect2(rock.p - extent, extent * 2), false, Color(1,1,1,float(rock.fade)/10) if rock.has("fade") else Color.WHITE)
 			if rock.has("fade"): continue
@@ -2953,6 +3252,7 @@ func _draw() -> void:
 			if npc.entry_age < .15: continue
 			draw_set_transform(center+(npc.p+ftl_offset(npc.entry_age,npc.angle)-pos)*zoom,npc.angle,Vector2.ONE*zoom)
 			sprite(npc.ship,Vector2.ZERO,int(specs[npc.ship][3]),Color.WHITE)
+			draw_frost(npc.ship,int(specs[npc.ship][3]),npc_cryo_slowdown(npc))
 			if npc.shield: shield_sprite(npc.ship,Vector2.ZERO,int(specs[npc.ship][3]),npc.shield_state.flash,npc.shield_state.break_flash)
 			draw_set_transform(center-pos*zoom,0,Vector2.ONE*zoom)
 			if is_same(npc,npc_target): draw_arc(npc.p,40,0,TAU,40,Color.GOLD,2)
@@ -3002,6 +3302,7 @@ func _draw() -> void:
 				draw_rect(Rect2(mount-Vector2(1,0),Vector2(2,flame*.75)),Color.GOLD)
 		if not player_destroying and ftl_arrival_age >= .15:
 			sprite(selected,Vector2.ZERO,stat(3),PAINT[paint])
+			draw_frost(selected,stat(3),player_cryo_slowdown())
 			if module_count(9) > 0: shield_sprite(selected,Vector2.ZERO,stat(3),player_shield().flash,player_shield().break_flash)
 		draw_set_transform(center-pos*zoom,0,Vector2.ONE*zoom)
 		vector_arrow(pos,vel,player_thrust,forward())
@@ -3016,24 +3317,29 @@ func _draw() -> void:
 		draw_set_transform(center-pos*zoom,0,Vector2.ONE*zoom)
 		draw_explosions(center)
 		draw_set_transform(Vector2.ZERO)
-	label(Vector2(20,34),"HANGAR ORBITAL / GODOT 0.1.6" if hangar else "SECTOR %d / 10.000 × 10.000" % (4107+sector),23,Color.TURQUOISE)
+	label(Vector2(20,34),"HANGAR ORBITAL / GODOT 0.1.17" if hangar else "SECTOR "+sector_name(sector)+" / 10.000 × 10.000",23,Color.TURQUOISE)
 	label(Vector2(20,62),"H Controles   M Mapa estelar" if hangar else "H Controles   M Mapa estelar")
 	label(Vector2(20,86),"%s   Masa %d   Empuje %d   Casco %d/%d   Bodega %d/%d U" % [ship_name(),stat(0),stat(1),hp,stat(2),used(),stat(4)])
 	if hangar:
-		label(Vector2(20,137),stations[dock_station].name+(" · Astillero" if stations[dock_station].shipyard else "")+"  ·  "+("Atraque universal" if stations[dock_station].layout == "shipyard" else ("Atraque Dreadnought" if dock_port >= CAPITAL_PORT else "Puerto "+str(dock_port+1)))+"  ·  Enter despegar",15,Color.PALE_GREEN)
+		label(Vector2(20,137),stations[dock_station].name+(" · Astillero" if stations[dock_station].shipyard else "")+"  ·  "+("Atraque universal" if stations[dock_station].layout == "shipyard" else ("Atraque capital" if dock_port >= CAPITAL_PORT else "Puerto "+str(dock_port+1)))+"  ·  Enter despegar",15,Color.PALE_GREEN)
 		label(Vector2(20,158),"Entregas mineras: %d U" % (nacar_reserve if dock_station == 1 else station_reserve),15,Color.PALE_GREEN)
 		var ship_class := specs[selected][10]
 		label(Vector2(20,110),"%s | Slots: Arm. %d  Def. %d  Util. %d  Motor %d" %
 			[ship_class,stat(5),stat(6),stat(7),stat(8)],15,Color.TURQUOISE)
 		label(Vector2(20,screen.y-246),"Inventario del jugador",16,Color.TURQUOISE)
+		var shown := 0
 		for i in range(RES.size()):
-			label(Vector2(20+(i%2)*195,screen.y-226+floori(i/2.0)*19),
-				"%s  %d U" % [RES[i],inventory[i]],13)
+			if inventory[i] <= 0 or shown >= 8: continue
+			label(Vector2(20+(shown%2)*240,screen.y-226+floori(shown/2.0)*19),"%s  %d U" % [RES[i],inventory[i]],13)
+			shown += 1
+		label(Vector2(20,screen.y-145),"F · Industria: consultar todos los materiales",13,Color.TURQUOISE)
 	else:
 		label(Vector2(20,182),"Coupled [C]" if coupled else "Decoupled [C]",15,Color.TURQUOISE)
 		label(Vector2(20,110),"%s   Vel %d   %s" % [MODES[mode],int(vel.length()),"Potencia %d%%" % power if mode == 2 else ""])
 		var keys := weapon_keys()
 		label(Vector2(20,134),keys if not keys.is_empty() else "Sin módulos de armamento",15,Color.TURQUOISE)
+	if not hangar and cryogenic_sector(sector):
+		label(Vector2(20,screen.y-44),"Nube criogénica · Boreal activo" if module_count(12)>0 else "Nube criogénica · Velocidad -%d %%" % roundi(player_cryo_slowdown()*100),15,Color.LIGHT_CYAN)
 	label(Vector2(20,screen.y-18),status,15,Color.TURQUOISE)
 	if not hangar and selected_target >= 0:
 		label(Vector2(20,158),"Objetivo: asteroide a %d" % pos.distance_to(rocks[selected_target].p),15,Color.GOLD)
@@ -3054,15 +3360,19 @@ func _draw() -> void:
 	if map_open: draw_ftl_map(center)
 	if hangar:
 		label(Vector2(screen.x-238,80),"%d Créditos" % credits,21,Color.PALE_GREEN)
-		menu_button(market_button(0),"Mercado Minería")
+		menu_button(market_button(0),"Mercado Materiales")
 		menu_button(market_button(1),"Mercado Objetos")
 		menu_button(market_button(2),"Inventario")
 		menu_button(market_button(3),"Descargar bodega")
 		menu_button(market_button(4),"Desatracar",true)
+		menu_button(market_button(5),"Industria [F]")
 	if market > 0 and (hangar or market == 3):
 		draw_market(center)
 	elif inventory_open and hangar:
 		draw_inventory(center)
 	elif help_open:
 		draw_help(center)
+	if industry.open and hangar: industry.draw(self,center)
+	draw_sector_stats(screen)
+	survey.draw(self,screen)
 	draw_console(screen)

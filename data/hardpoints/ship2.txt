@@ -14,3 +14,5 @@ nave,2,salvaging,1,-0.20822,-0.24430
 nave,2,motor,0,0.00000,0.48534
 nave,2,motor,1,-0.05158,0.48371
 nave,2,motor,2,0.05158,0.48371
+nave,2,hangar_drones_tubo,0,0.14900,-0.10586
+nave,2,hangar_drones_tubo,1,-0.14900,-0.10586

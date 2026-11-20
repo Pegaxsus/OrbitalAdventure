@@ -2,3 +2,5 @@ trait,parametro,valor
 gimbal_miners,cono_grados,90
 long_miner,multiplicador_alcance,1.25
 double_ordnance,multiplicador_salva,2
+fighter_hangar,habilita_cazas,1
+long_ftl,multiplicador_alcance,3

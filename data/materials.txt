@@ -1,0 +1,89 @@
+id,key,name,category,stage,price,rarity
+0,water_ice,Hielo de agua,combustible,bruto,5,comun
+1,methane,Metano,combustible,bruto,7,comun
+2,iron,Hierro,construccion,bruto,8,comun
+3,aluminium,Aluminio,construccion,bruto,12,comun
+4,titanium,Titanio,construccion,bruto,20,comun
+5,copper,Cobre,construccion,bruto,10,comun
+6,silicon,Silicio,construccion,bruto,14,comun
+7,carbon,Carbono,construccion,bruto,9,comun
+8,nickel,Níquel,construccion,bruto,15,comun
+9,rare_earths,Tierras raras,especial,bruto,25,oculto
+10,tungsten,Tungsteno,construccion,bruto,32,comun
+11,chromium,Cromo,construccion,bruto,18,comun
+12,cobalt,Cobalto,construccion,bruto,26,comun
+13,magnesium,Magnesio,construccion,bruto,12,comun
+14,molybdenum,Molibdeno,construccion,bruto,29,comun
+15,veltrite,Veltrita,especial,bruto,180,oculto
+16,naurite,Naurita,especial,bruto,200,oculto
+17,oraxite,Oraxita,especial,bruto,220,oculto
+18,silexium,Silexio,especial,bruto,240,oculto
+19,theryne,Terina,especial,bruto,260,oculto
+20,quarion,Cuarión,especial,bruto,300,oculto
+21,water_ice_ref,Agua purificada,combustible,procesado,15,comun
+22,methane_ref,Metano purificado,combustible,procesado,21,comun
+23,iron_ref,Lingote de hierro,construccion,procesado,24,comun
+24,aluminium_ref,Lingote de aluminio,construccion,procesado,36,comun
+25,titanium_ref,Lingote de titanio,construccion,procesado,60,comun
+26,copper_ref,Lingote de cobre,construccion,procesado,30,comun
+27,silicon_ref,Obleas de silicio,construccion,procesado,42,comun
+28,carbon_ref,Carbono purificado,construccion,procesado,27,comun
+29,nickel_ref,Lingote de níquel,construccion,procesado,45,comun
+30,rare_earths_ref,Concentrado de tierras raras,especial,procesado,75,comun
+31,tungsten_ref,Lingote de tungsteno,construccion,procesado,96,comun
+32,chromium_ref,Lingote de cromo,construccion,procesado,54,comun
+33,cobalt_ref,Lingote de cobalto,construccion,procesado,78,comun
+34,magnesium_ref,Lingote de magnesio,construccion,procesado,36,comun
+35,molybdenum_ref,Lingote de molibdeno,construccion,procesado,87,comun
+36,veltrite_ref,Cristal de veltrita,especial,procesado,540,comun
+37,naurite_ref,Cristal de naurita,especial,procesado,600,comun
+38,oraxite_ref,Cristal de oraxita,especial,procesado,660,comun
+39,silexium_ref,Cristal de silexio,especial,procesado,720,comun
+40,theryne_ref,Cristal de terina,especial,procesado,780,comun
+41,quarion_ref,Cristal de cuarión,especial,procesado,900,comun
+42,hydrogen,Hidrógeno,combustible,procesado,40,comun
+43,oxygen,Oxígeno,combustible,procesado,15,comun
+44,steel,Acero,construccion,procesado,50,comun
+45,stainless,Acero inoxidable,construccion,procesado,80,comun
+46,superalloy,Superaleación Ni-Co,construccion,procesado,140,comun
+47,al_mg,Aleación Al-Mg,construccion,procesado,60,comun
+48,wc,Carburo de tungsteno,construccion,procesado,130,comun
+49,copper_bar,Barra de cobre,construccion,procesado,45,comun
+50,copper_wire,Cable de cobre,construccion,procesado,50,comun
+51,steel_plate,Placa de acero,construccion,componente,65,comun
+52,titanium_plate,Placa de titanio,construccion,componente,95,comun
+53,steel_tube,Tubo de acero,construccion,componente,65,comun
+54,light_frame,Bastidor ligero,construccion,componente,110,comun
+55,glass,Vidrio técnico,construccion,procesado,65,comun
+56,ceramic,Cerámica térmica,construccion,procesado,115,comun
+57,chip,Chip básico,construccion,componente,170,comun
+58,circuit,Circuito de control,construccion,componente,260,comun
+59,magnet,Imán de tierras raras,especial,componente,200,comun
+60,construction,Piezas de construcción,construccion,componente,260,comun
+61,hull,Sección de casco,construccion,componente,420,comun
+62,engine,Conjunto de motor,construccion,componente,600,comun
+63,shield_matrix,Matriz de escudo,especial,componente,800,comun
+64,sensor,Sensor de trazas,especial,componente,950,comun
+65,ftl_core,Núcleo FTL,especial,componente,1400,comun
+66,propellant,Mezcla propulsora H-O,combustible,procesado,75,comun
+67,coolant,Refrigerante industrial,construccion,procesado,55,comun
+68,habitat,Soporte de hábitat,construccion,componente,350,comun
+69,drone_frame,Chasis de dron,construccion,componente,400,comun
+70,station_truss,Viga de estación,construccion,componente,420,comun
+71,tritium,Tritio,combustible,bruto,140,escaso
+72,xenon,Xenón,combustible,bruto,110,escaso
+73,tritium_ref,Tritio purificado,combustible,procesado,420,comun
+74,xenon_ref,Xenón purificado,combustible,procesado,330,comun
+75,armor_plates,Placas de blindaje compuesto,construccion,componente,450,comun
+76,capacitor_battery,Batería de condensadores,construccion,componente,450,comun
+77,cargo_bay,Bodega modular,construccion,componente,500,comun
+78,computer_system,Sistema informático,construccion,componente,650,comun
+79,hangar_bay,Bahía de hangar,construccion,componente,1400,comun
+80,weapon_mount,Montaje de armamento,construccion,componente,450,comun
+81,core_regulator,Regulador térmico del núcleo,construccion,componente,700,comun
+82,reactor_core,Núcleo de reactor,construccion,componente,1800,comun
+83,maintenance_bay,Bahía de mantenimiento,construccion,componente,850,comun
+84,drone_bay,Bahía de drones,construccion,componente,950,comun
+85,sensor_cluster,Conjunto de sensores,construccion,componente,1000,comun
+86,weapon_components,Componentes de armamento,construccion,componente,600,comun
+87,propulsion_system,Sistema de propulsión,construccion,componente,1200,comun
